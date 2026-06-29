@@ -1,0 +1,1988 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SAMS - Smart Attendance Management System</title>
+    <script src="https://cdn.tailwindcss.com">
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js">
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: { 50: '#eff6ff', 100: '#dbeafe', 200: '#bfdbfe', 300: '#93c5fd',
+                            400: '#60a5fa', 500: '#3b82f6', 600: '#2563eb', 700: '#1d4ed8',
+                            800: '#1e40af', 900: '#1e3a8a' },
+                    },
+                    fontFamily: { 'sans': ['Inter', 'system-ui', 'sans-serif'] },
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.75);
+            --glass-border: rgba(255, 255, 255, 0.3);
+            --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
+        }
+        .dark {
+            --glass-bg: rgba(30, 41, 59, 0.8);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        .glass {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--glass-shadow);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+        }
+        .sidebar-link {
+            transition: all 0.25s ease;
+            border-radius: 12px;
+            margin: 2px 8px;
+            padding: 10px 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 500;
+            font-size: 0.925rem;
+            color: #64748b;
+        }
+        .sidebar-link:hover {
+            background: #f1f5f9;
+            color: #1e293b;
+        }
+        .sidebar-link.active {
+            background: #3b82f6;
+            color: #fff;
+            box-shadow: 0 4px 14px rgba(59, 130, 246, 0.35);
+        }
+        .dark .sidebar-link {
+            color: #94a3b8;
+        }
+        .dark .sidebar-link:hover {
+            background: #1e293b;
+            color: #e2e8f0;
+        }
+        .dark .sidebar-link.active {
+            background: #3b82f6;
+            color: #fff;
+        }
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        .card-hover:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+        .dark .card-hover:hover {
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+        }
+        .pulse-dot {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%,
+            100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.4;
+            }
+        }
+        .fade-in {
+            animation: fadeIn 0.4s ease forwards;
+        }
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(12px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .slide-in {
+            animation: slideIn 0.35s ease forwards;
+        }
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        .scale-in {
+            animation: scaleIn 0.3s ease forwards;
+        }
+        @keyframes scaleIn {
+            from {
+                opacity: 0;
+                transform: scale(0.92);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+        .custom-scroll::-webkit-scrollbar {
+            width: 5px;
+        }
+        .custom-scroll::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scroll::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+        .dark .custom-scroll::-webkit-scrollbar-thumb {
+            background: #475569;
+        }
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 9999;
+            animation: slideUp 0.4s ease;
+        }
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(40px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .login-bg-admin {
+            background: linear-gradient(135deg, #1e3a5f 0%, #0f172a 40%, #1e293b 100%);
+            position: relative;
+        }
+        .login-bg-admin::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(ellipse at 30% 50%, rgba(59, 130, 246, 0.25) 0%, transparent 60%),
+                radial-gradient(ellipse at 70% 20%, rgba(139, 92, 246, 0.2) 0%, transparent 55%),
+                radial-gradient(ellipse at 50% 80%, rgba(6, 182, 212, 0.15) 0%, transparent 50%);
+            pointer-events: none;
+        }
+        .login-bg-lecturer {
+            background: linear-gradient(135deg, #14532d 0%, #052e16 40%, #064e3b 100%);
+            position: relative;
+        }
+        .login-bg-lecturer::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(ellipse at 30% 50%, rgba(34, 197, 94, 0.25) 0%, transparent 60%),
+                radial-gradient(ellipse at 70% 20%, rgba(16, 185, 129, 0.2) 0%, transparent 55%),
+                radial-gradient(ellipse at 50% 80%, rgba(132, 204, 22, 0.15) 0%, transparent 50%);
+            pointer-events: none;
+        }
+        .login-bg-student {
+            background: linear-gradient(135deg, #4a1d96 0%, #2e1065 40%, #3b0f6e 100%);
+            position: relative;
+        }
+        .login-bg-student::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(ellipse at 30% 50%, rgba(168, 85, 247, 0.25) 0%, transparent 60%),
+                radial-gradient(ellipse at 70% 20%, rgba(236, 72, 153, 0.2) 0%, transparent 55%),
+                radial-gradient(ellipse at 50% 80%, rgba(99, 102, 241, 0.18) 0%, transparent 50%);
+            pointer-events: none;
+        }
+        .modal-overlay {
+            animation: fadeInOverlay 0.25s ease;
+        }
+        @keyframes fadeInOverlay {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+        input[type="search"]::-webkit-search-clear-button {
+            display: none;
+        }
+    </style>
+</head>
+<body class="font-sans bg-gray-50 dark:bg-slate-900 transition-colors duration-300 min-h-screen" id="app-root">
+
+    <!-- ==================== LANDING PAGE (unchanged) ==================== -->
+    <div id="landing-page" class="min-h-screen">
+        <nav class="fixed top-0 w-full z-50 glass border-b border-gray-200/50 dark:border-slate-700/50">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex items-center justify-between h-16">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-fingerprint text-white text-lg"></i>
+                        </div>
+                        <span class="text-xl font-bold text-gray-900 dark:text-white">SAMS</span>
+                    </div>
+                    <div class="hidden md:flex items-center gap-8">
+                        <a href="#features" class="text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 font-medium transition-colors">Features</a>
+                        <a href="#about" class="text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 font-medium transition-colors">About</a>
+                        <a href="#contact" class="text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 font-medium transition-colors">Contact</a>
+                        <button onclick="showRoleSelection()" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-medium transition-all shadow-lg shadow-blue-600/25 hover:shadow-blue-600/40">
+                            Login <i class="fas fa-arrow-right ml-2"></i>
+                        </button>
+                        <button onclick="toggleDarkMode()" class="p-2.5 rounded-xl bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-slate-600 transition-colors">
+                            <i class="fas fa-moon dark:hidden"></i>
+                            <i class="fas fa-sun hidden dark:inline"></i>
+                        </button>
+                    </div>
+                    <button class="md:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700" onclick="toggleMobileMenu()">
+                        <i class="fas fa-bars text-xl text-gray-700 dark:text-gray-200"></i>
+                    </button>
+                </div>
+            </div>
+            <div id="mobile-menu" class="hidden md:hidden px-4 pb-4 space-y-2">
+                <a href="#features" class="block py-2 text-gray-600 dark:text-gray-300">Features</a>
+                <a href="#about" class="block py-2 text-gray-600 dark:text-gray-300">About</a>
+                <a href="#contact" class="block py-2 text-gray-600 dark:text-gray-300">Contact</a>
+                <button onclick="showRoleSelection()" class="w-full bg-blue-600 text-white py-2.5 rounded-xl font-medium">Login</button>
+            </div>
+        </nav>
+        <section class="pt-28 pb-20 px-4">
+            <div class="max-w-7xl mx-auto text-center">
+                <div class="inline-flex items-center gap-2 bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 px-4 py-1.5 rounded-full text-sm font-medium mb-6">
+                    <span class="pulse-dot w-2 h-2 bg-green-500 rounded-full"></span> Real-time RFID Attendance
+                </div>
+                <h1 class="text-5xl md:text-7xl font-extrabold text-gray-900 dark:text-white leading-tight mb-6">
+                    Smart Attendance<br>
+                    <span class="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Management System</span>
+                </h1>
+                <p class="text-lg md:text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto mb-10">
+                    Seamless RFID-based attendance tracking for modern universities. Real-time synchronization, powerful dashboards, and complete automation.
+                </p>
+                <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                    <button onclick="showRoleSelection()" class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3.5 rounded-xl text-lg font-semibold transition-all shadow-xl shadow-blue-600/30">
+                        Get Started <i class="fas fa-rocket ml-2"></i>
+                    </button>
+                    <a href="#features" class="border-2 border-gray-300 dark:border-slate-600 text-gray-700 dark:text-gray-300 px-8 py-3.5 rounded-xl text-lg font-semibold hover:border-blue-500 hover:text-blue-600 transition-all">
+                        Learn More <i class="fas fa-chevron-down ml-2"></i>
+                    </a>
+                </div>
+            </div>
+        </section>
+        <section id="features" class="py-20 px-4 bg-white dark:bg-slate-800/50">
+            <div class="max-w-7xl mx-auto">
+                <h2 class="text-4xl font-bold text-center text-gray-900 dark:text-white mb-4">Powerful Features</h2>
+                <p class="text-center text-gray-500 dark:text-gray-400 mb-16 max-w-lg mx-auto">Everything you need to manage attendance efficiently</p>
+                <div class="grid md:grid-cols-3 gap-8">
+                    <div class="glass rounded-2xl p-8 card-hover text-center">
+                        <div class="w-14 h-14 bg-blue-100 dark:bg-blue-900/40 rounded-2xl flex items-center justify-center mx-auto mb-5"><i class="fas fa-globe text-2xl text-blue-600"></i></div>
+                        <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-3">Anywhere Access</h3>
+                        <p class="text-gray-500 dark:text-gray-400">Attendance records are available anytime, allowing students and lecturers to monitor attendance from any internet-connected device.</p>
+                    </div>
+                    <div class="glass rounded-2xl p-8 card-hover text-center">
+                        <div class="w-14 h-14 bg-purple-100 dark:bg-purple-900/40 rounded-2xl flex items-center justify-center mx-auto mb-5"><i class="fas fa-lock text-2xl text-purple-600"></i></div>
+                        <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-3">Secure Data Protection</h3>
+                        <p class="text-gray-500 dark:text-gray-400">Advanced authentication, encrypted data transmission, and role-based access controls keep attendance records secure and accessible only to authorized users.</p>
+                    </div>
+                    <div class="glass rounded-2xl p-8 card-hover text-center">
+                        <div class="w-14 h-14 bg-green-100 dark:bg-green-900/40 rounded-2xl flex items-center justify-center mx-auto mb-5"><i class="fas fa-chart-pie text-2xl text-green-600"></i></div>
+                        <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-3">Smart Analytics</h3>
+                        <p class="text-gray-500 dark:text-gray-400">Beautiful charts, attendance percentages, eligibility tracking, and exportable reports for complete oversight.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <section id="about" class="py-20 px-4">
+            <div class="max-w-4xl mx-auto text-center"><h2 class="text-4xl font-bold text-gray-900 dark:text-white mb-6">About SAMS</h2><p class="text-gray-600 dark:text-gray-400 text-lg leading-relaxed">SAMS is a cutting-edge attendance solution designed for universities. Using RFID technology with ESP32 microcontrollers, it eliminates manual roll calls and provides accurate, real-time attendance data for students, lecturers, and administrators.</p></div>
+        </section>
+        <section id="contact" class="py-20 px-4 bg-white dark:bg-slate-800/50">
+            <div class="max-w-4xl mx-auto text-center"><h2 class="text-4xl font-bold text-gray-900 dark:text-white mb-6">Contact Us</h2><p class="text-gray-500 dark:text-gray-400 mb-8">Have questions? Reach out to our team.</p>
+                <div class="glass rounded-2xl p-8 max-w-lg mx-auto"><p class="text-gray-700 dark:text-gray-300"><i class="fas fa-envelope mr-2 text-blue-600"></i> support@sams-university.com</p><p class="text-gray-700 dark:text-gray-300 mt-3"><i class="fas fa-phone mr-2 text-blue-600"></i> +234 814 044 7696</p></div>
+            </div>
+        </section>
+        <footer class="bg-gray-900 text-gray-400 py-10 px-4 text-center"><p>&copy; 2026 SAMS. All rights reserved. Built for modern universities.</p></footer>
+    </div>
+
+    <!-- ==================== ROLE SELECTION OVERLAY (unchanged) ==================== -->
+    <div id="role-selection-overlay" class="hidden fixed inset-0 z-[999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+        <div class="glass rounded-3xl p-8 w-full max-w-lg scale-in relative z-10">
+            <button onclick="closeRoleSelection()" class="absolute top-4 right-4 p-2 hover:bg-gray-200 dark:hover:bg-slate-600 rounded-xl transition-colors text-gray-400 hover:text-gray-700 dark:hover:text-gray-200">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+            <h2 class="text-2xl font-bold text-gray-900 dark:text-white text-center mb-2">Select Login Portal</h2>
+            <p class="text-gray-500 dark:text-gray-400 text-center mb-8 text-sm">Choose your role to access the dashboard</p>
+            <div class="space-y-4">
+                <button onclick="openLoginPage('admin')" class="w-full p-5 rounded-2xl border-2 border-gray-200 dark:border-slate-600 hover:border-blue-500 dark:hover:border-blue-400 transition-all flex items-center gap-4 group bg-white/60 dark:bg-slate-800/60">
+                    <div class="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform"><i class="fas fa-user-shield text-white text-xl"></i></div>
+                    <div class="text-left"><p class="font-semibold text-gray-900 dark:text-white text-lg">Admin Portal</p><p class="text-sm text-gray-500 dark:text-gray-400">Manage system, users & courses</p></div>
+                    <i class="fas fa-chevron-right ml-auto text-gray-400 group-hover:text-blue-500 transition-colors"></i>
+                </button>
+                <button onclick="openLoginPage('lecturer')" class="w-full p-5 rounded-2xl border-2 border-gray-200 dark:border-slate-600 hover:border-green-500 dark:hover:border-green-400 transition-all flex items-center gap-4 group bg-white/60 dark:bg-slate-800/60">
+                    <div class="w-12 h-12 bg-green-500 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform"><i class="fas fa-chalkboard-user text-white text-xl"></i></div>
+                    <div class="text-left"><p class="font-semibold text-gray-900 dark:text-white text-lg">Lecturer Portal</p><p class="text-sm text-gray-500 dark:text-gray-400">View courses & attendance records</p></div>
+                    <i class="fas fa-chevron-right ml-auto text-gray-400 group-hover:text-green-500 transition-colors"></i>
+                </button>
+                <button onclick="openLoginPage('student')" class="w-full p-5 rounded-2xl border-2 border-gray-200 dark:border-slate-600 hover:border-purple-500 dark:hover:border-purple-400 transition-all flex items-center gap-4 group bg-white/60 dark:bg-slate-800/60">
+                    <div class="w-12 h-12 bg-purple-500 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform"><i class="fas fa-user-graduate text-white text-xl"></i></div>
+                    <div class="text-left"><p class="font-semibold text-gray-900 dark:text-white text-lg">Student Portal</p><p class="text-sm text-gray-500 dark:text-gray-400">Check attendance & eligibility</p></div>
+                    <i class="fas fa-chevron-right ml-auto text-gray-400 group-hover:text-purple-500 transition-colors"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== DEDICATED LOGIN PAGES (unchanged) ==================== -->
+    <div id="login-page-admin" class="hidden fixed inset-0 z-[999] login-bg-admin flex items-center justify-center p-4">
+        <div class="w-full max-w-md relative z-10 scale-in">
+            <button onclick="closeLoginPage('admin')" class="absolute -top-12 right-0 p-2 text-white/70 hover:text-white transition-colors">
+                <i class="fas fa-times text-xl"></i> <span class="text-sm">Close</span>
+            </button>
+            <div class="glass rounded-3xl p-8 text-center">
+                <div class="w-16 h-16 bg-blue-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-blue-500/30">
+                    <i class="fas fa-user-shield text-white text-2xl"></i>
+                </div>
+                <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-1">Admin Login</h2>
+                <p class="text-gray-500 dark:text-gray-400 text-sm mb-6">Enter your credentials to access the admin panel</p>
+                <form onsubmit="handleDedicatedLogin(event, 'admin')" class="space-y-4 text-left">
+                    <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email Address</label><input type="email" id="admin-login-email" required class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all"></div>
+                    <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Password</label><input type="password" id="admin-login-password" required class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all"></div>
+                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3.5 rounded-xl font-semibold transition-all shadow-lg shadow-blue-600/30 text-lg">Sign In</button>
+                </form>
+                <button onclick="closeLoginPage('admin')" class="mt-4 text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors">← Back to role selection</button>
+            </div>
+        </div>
+    </div>
+    <div id="login-page-lecturer" class="hidden fixed inset-0 z-[999] login-bg-lecturer flex items-center justify-center p-4">
+        <div class="w-full max-w-md relative z-10 scale-in">
+            <button onclick="closeLoginPage('lecturer')" class="absolute -top-12 right-0 p-2 text-white/70 hover:text-white transition-colors">
+                <i class="fas fa-times text-xl"></i> <span class="text-sm">Close</span>
+            </button>
+            <div class="glass rounded-3xl p-8 text-center">
+                <div class="w-16 h-16 bg-green-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-green-500/30">
+                    <i class="fas fa-chalkboard-user text-white text-2xl"></i>
+                </div>
+                <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-1">Lecturer Login</h2>
+                <p class="text-gray-500 dark:text-gray-400 text-sm mb-6">Enter your credentials to access your courses</p>
+                <form onsubmit="handleDedicatedLogin(event, 'lecturer')" class="space-y-4 text-left">
+                    <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email Address</label><input type="email" id="lecturer-login-email" required class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-green-500 outline-none transition-all"></div>
+                    <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Password</label><input type="password" id="lecturer-login-password" required class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-green-500 outline-none transition-all"></div>
+                    <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white py-3.5 rounded-xl font-semibold transition-all shadow-lg shadow-green-600/30 text-lg">Sign In</button>
+                </form>
+                <button onclick="closeLoginPage('lecturer')" class="mt-4 text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors">← Back to role selection</button>
+            </div>
+        </div>
+    </div>
+    <div id="login-page-student" class="hidden fixed inset-0 z-[999] login-bg-student flex items-center justify-center p-4">
+        <div class="w-full max-w-md relative z-10 scale-in">
+            <button onclick="closeLoginPage('student')" class="absolute -top-12 right-0 p-2 text-white/70 hover:text-white transition-colors">
+                <i class="fas fa-times text-xl"></i> <span class="text-sm">Close</span>
+            </button>
+            <div class="glass rounded-3xl p-8 text-center">
+                <div class="w-16 h-16 bg-purple-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-purple-500/30">
+                    <i class="fas fa-user-graduate text-white text-2xl"></i>
+                </div>
+                <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-1">Student Login</h2>
+                <p class="text-gray-500 dark:text-gray-400 text-sm mb-6">Enter your registration number and password</p>
+                <form onsubmit="handleDedicatedLogin(event, 'student')" class="space-y-4 text-left">
+                    <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Registration Number</label><input type="text" id="student-login-regno" required class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 outline-none transition-all"></div>
+                    <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Password</label><input type="password" id="student-login-password" required class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 outline-none transition-all"></div>
+                    <button type="submit" class="w-full bg-purple-600 hover:bg-purple-700 text-white py-3.5 rounded-xl font-semibold transition-all shadow-lg shadow-purple-600/30 text-lg">Sign In</button>
+                </form>
+                <button onclick="closeLoginPage('student')" class="mt-4 text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors">← Back to role selection</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== DASHBOARD CONTAINER ==================== -->
+    <div id="dashboard-container" class="hidden min-h-screen">
+        <aside id="sidebar" class="fixed top-0 left-0 h-full w-64 bg-white dark:bg-slate-800 border-r border-gray-200 dark:border-slate-700 z-40 transform -translate-x-full md:translate-x-0 transition-transform duration-300 flex flex-col">
+            <div class="p-5 flex items-center gap-3 border-b border-gray-200 dark:border-slate-700">
+                <div class="w-9 h-9 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center"><i class="fas fa-fingerprint text-white"></i></div>
+                <span class="font-bold text-lg text-gray-900 dark:text-white">SAMS</span>
+            </div>
+            <nav id="sidebar-nav" class="flex-1 py-4 overflow-y-auto custom-scroll space-y-1"></nav>
+            <div class="p-4 border-t border-gray-200 dark:border-slate-700">
+                <button onclick="logout()" class="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors font-medium"><i class="fas fa-right-from-bracket"></i> Logout</button>
+                <button onclick="toggleDarkMode()" class="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-gray-500 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors font-medium mt-1"><i class="fas fa-circle-half-stroke"></i> Toggle Theme</button>
+            </div>
+        </aside>
+        <main class="md:ml-64 pt-16 min-h-screen bg-gray-50 dark:bg-slate-900 transition-colors">
+            <header class="fixed top-0 right-0 left-0 md:left-64 h-16 bg-white dark:bg-slate-800 border-b border-gray-200 dark:border-slate-700 z-30 flex items-center justify-between px-6">
+                <button class="md:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700" onclick="toggleSidebar()"><i class="fas fa-bars text-xl text-gray-700 dark:text-gray-200"></i></button>
+                <div class="hidden sm:block text-sm text-gray-500 dark:text-gray-400" id="dashboard-title">Dashboard</div>
+                <div class="flex items-center gap-4">
+                    <span class="text-sm font-medium text-gray-700 dark:text-gray-200" id="user-display-name">User</span>
+                    <div class="w-9 h-9 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold text-sm" id="user-avatar">U</div>
+                </div>
+            </header>
+            <div class="p-6" id="main-content-area"></div>
+        </main>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toast-container" class="toast"></div>
+
+    <!-- Confirmation Modal -->
+    <div id="confirm-modal" class="hidden fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 modal-overlay">
+        <div class="glass rounded-2xl p-6 w-full max-w-sm mx-4 text-center scale-in">
+            <p class="text-gray-900 dark:text-white font-medium mb-4" id="confirm-message">Are you sure?</p>
+            <div class="flex gap-3 justify-center">
+                <button onclick="confirmAction(false)" class="px-5 py-2 rounded-xl bg-gray-200 dark:bg-slate-600 text-gray-700 dark:text-gray-200 font-medium hover:bg-gray-300 transition-colors">Cancel</button>
+                <button onclick="confirmAction(true)" class="px-5 py-2 rounded-xl bg-red-500 text-white font-medium hover:bg-red-600 transition-colors" id="confirm-yes-btn">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==================== GLOBAL STATE ====================
+        const APP = {
+            darkMode: false,
+            currentRole: null,
+            currentUser: null,
+            confirmCallback: null,
+            data: {
+                students: [],
+                lecturers: [],
+                courses: [
+                    { id: 'MCT401', name: 'MCT 401', title: 'Control Systems Engineering' },
+                    { id: 'MCT411', name: 'MCT 411', title: 'Robotics & Automation' },
+                    { id: 'MCT421', name: 'MCT 421', title: 'Embedded Systems Design' },
+                    { id: 'MCT431', name: 'MCT 431', title: 'Fluid Power Systems' },
+                    { id: 'MCT433', name: 'MCT 433', title: 'Industrial Instrumentation' },
+                    { id: 'MCT441', name: 'MCT 441', title: 'Manufacturing Processes' },
+                    { id: 'MCT461', name: 'MCT 461', title: 'Mechatronics System Design' },
+                    { id: 'MCT491', name: 'MCT 491', title: 'Final Year Project' },
+                    { id: 'ENGR401', name: 'ENGR 401', title: 'Engineering Ethics & Law' },
+                ],
+                attendance: {},
+                classSessions: {},
+                studentReports: [],
+                lecturerReports: [],
+            },
+            charts: {},
+            currentSemester: null, // { id, name, startDate, active: true/false }
+            semesterHistory: [],
+        };
+
+        function loadState() {
+            const saved = localStorage.getItem('sams_data_v4');
+            if (saved) {
+                try {
+                    const parsed = JSON.parse(saved);
+                    APP.data.students = parsed.students || [];
+                    APP.data.lecturers = parsed.lecturers || [];
+                    APP.data.attendance = parsed.attendance || {};
+                    APP.data.classSessions = parsed.classSessions || {};
+                    APP.data.courses = parsed.courses || APP.data.courses;
+                    APP.data.studentReports = parsed.studentReports || [];
+                    APP.data.lecturerReports = parsed.lecturerReports || [];
+                    APP.semesterHistory = parsed.semesterHistory || [];
+                    APP.currentSemester = parsed.currentSemester || null;
+                } catch (e) { console.error('Failed to load state', e); }
+            }
+            if (APP.data.students.length === 0) seedDemoData();
+            APP.darkMode = localStorage.getItem('sams_dark') === 'true';
+            if (APP.darkMode) document.documentElement.classList.add('dark');
+        }
+
+        function saveState() {
+            localStorage.setItem('sams_data_v4', JSON.stringify({
+                students: APP.data.students,
+                lecturers: APP.data.lecturers,
+                attendance: APP.data.attendance,
+                classSessions: APP.data.classSessions,
+                courses: APP.data.courses,
+                studentReports: APP.data.studentReports,
+                lecturerReports: APP.data.lecturerReports,
+                semesterHistory: APP.semesterHistory,
+                currentSemester: APP.currentSemester,
+            }));
+            localStorage.setItem('sams_dark', APP.darkMode);
+        }
+
+        function seedDemoData() {
+            APP.data.students = [
+                { id: 'STU001', fullName: 'Adeola Ogunleye', regNo: 'MCT/2020/001', department: 'MCT', level: '500',
+                    faculty: 'Engineering', email: 'adeola@student.edu', phone: '08012345678', rfidUid: 'RFID-A1B2C3',
+                    password: 'student123', courses: ['MCT401', 'MCT411', 'MCT421', 'MCT431', 'MCT433', 'MCT441',
+                        'MCT461', 'MCT491', 'ENGR401'] },
+                { id: 'STU002', fullName: 'Chidi Okonkwo', regNo: 'MCT/2020/002', department: 'MCT', level: '500',
+                    faculty: 'Engineering', email: 'chidi@student.edu', phone: '08087654321', rfidUid: 'RFID-D4E5F6',
+                    password: 'student123', courses: ['MCT401', 'MCT411', 'MCT421', 'MCT431', 'MCT433', 'MCT441',
+                        'MCT461', 'MCT491', 'ENGR401'] },
+                { id: 'STU003', fullName: 'Fatima Bello', regNo: 'MCT/2021/003', department: 'MCT', level: '400',
+                    faculty: 'Engineering', email: 'fatima@student.edu', phone: '08011223344', rfidUid: 'RFID-G7H8I9',
+                    password: 'student123', courses: ['MCT401', 'MCT411', 'MCT421', 'MCT431', 'MCT433', 'MCT441',
+                        'MCT461', 'MCT491', 'ENGR401'] },
+            ];
+            APP.data.lecturers = [
+                { id: 'LEC001', fullName: 'Dr. Emmanuel Nwosu', staffId: 'STF-ENG-001', email: 'emmanuel@university.edu',
+                    phone: '08033334444', department: 'MCT', password: 'lecturer123', assignedCourses: ['MCT401',
+                        'MCT411', 'MCT421'] },
+                { id: 'LEC002', fullName: 'Prof. Grace Adeyemi', staffId: 'STF-ENG-002', email: 'grace@university.edu',
+                    phone: '08055556666', department: 'MCT', password: 'lecturer123', assignedCourses: ['MCT431',
+                        'MCT433', 'MCT441'] },
+            ];
+            // Initialize empty class sessions for each course
+            APP.data.classSessions = {};
+            APP.data.courses.forEach(c => { APP.data.classSessions[c.id] = []; });
+            APP.data.attendance = {};
+            APP.data.studentReports = [];
+            APP.data.lecturerReports = [];
+            APP.semesterHistory = [];
+            APP.currentSemester = null;
+            saveState();
+        }
+
+        function getClassesHeld(courseId) {
+            return (APP.data.classSessions[courseId] || []).length;
+        }
+
+        function getClassesAttended(studentId, courseId) {
+            const courseAtt = APP.data.attendance[studentId]?.[courseId];
+            if (!courseAtt || !courseAtt.sessions) return 0;
+            let count = 0;
+            Object.values(courseAtt.sessions).forEach(sess => {
+                if (sess.checkedIn && sess.checkedOut) count++;
+            });
+            return count;
+        }
+
+        function getAttendancePercentage(studentId, courseId) {
+            const held = getClassesHeld(courseId);
+            if (held === 0) return 0;
+            const attended = getClassesAttended(studentId, courseId);
+            return Math.round((attended / held) * 100);
+        }
+
+        function getStudentSessionStatus(studentId, courseId, sessionDate) {
+            const sess = APP.data.attendance[studentId]?.[courseId]?.sessions?.[sessionDate];
+            if (!sess) return 'none';
+            if (sess.checkedIn && sess.checkedOut) return 'full';
+            if (sess.checkedIn && !sess.checkedOut) return 'checkin-only';
+            if (!sess.checkedIn && sess.checkedOut) return 'checkout-only';
+            return 'none';
+        }
+
+        // ==================== UTILITY ====================
+        function $(sel) { return document.querySelector(sel); }
+        function $$(sel) { return document.querySelectorAll(sel); }
+
+        function showToast(message, type = 'success') {
+            const container = $('#toast-container');
+            const colors = { success: 'bg-green-500', error: 'bg-red-500', info: 'bg-blue-500', warning: 'bg-yellow-500' };
+            const icons = { success: 'fa-check-circle', error: 'fa-exclamation-circle', info: 'fa-info-circle', warning: 'fa-exclamation-triangle' };
+            const toast = document.createElement('div');
+            toast.className = `${colors[type] || colors.success} text-white px-5 py-3 rounded-xl shadow-2xl flex items-center gap-3 text-sm font-medium mb-3 fade-in`;
+            toast.innerHTML = `<i class="fas ${icons[type] || icons.success}"></i> ${message}`;
+            container.appendChild(toast);
+            setTimeout(() => { toast.style.opacity = '0'; toast.style.transition = 'opacity 0.3s'; setTimeout(() => toast.remove(), 300); }, 3500);
+        }
+
+        function showConfirm(message, callback) {
+            $('#confirm-message').textContent = message;
+            $('#confirm-modal').classList.remove('hidden');
+            APP.confirmCallback = callback;
+        }
+
+        function confirmAction(confirmed) {
+            $('#confirm-modal').classList.add('hidden');
+            if (confirmed && APP.confirmCallback) APP.confirmCallback();
+            APP.confirmCallback = null;
+        }
+
+        function toggleDarkMode() {
+            APP.darkMode = !APP.darkMode;
+            document.documentElement.classList.toggle('dark', APP.darkMode);
+            saveState();
+            updateChartsTheme();
+        }
+
+        function toggleSidebar() {
+            $('#sidebar').classList.toggle('-translate-x-full');
+        }
+
+        function toggleMobileMenu() {
+            $('#mobile-menu').classList.toggle('hidden');
+        }
+
+        // ==================== LOGIN SYSTEM ====================
+        function showRoleSelection() {
+            $('#role-selection-overlay').classList.remove('hidden');
+        }
+
+        function closeRoleSelection() {
+            $('#role-selection-overlay').classList.add('hidden');
+        }
+
+        function openLoginPage(role) {
+            closeRoleSelection();
+            if (role === 'admin') $('#login-page-admin').classList.remove('hidden');
+            else if (role === 'lecturer') $('#login-page-lecturer').classList.remove('hidden');
+            else if (role === 'student') $('#login-page-student').classList.remove('hidden');
+            setTimeout(() => {
+                const firstInput = document.querySelector(`#login-page-${role} input:not([type="hidden"])`);
+                if (firstInput) firstInput.focus();
+            }, 300);
+        }
+
+        function closeLoginPage(role) {
+            if (role === 'admin') $('#login-page-admin').classList.add('hidden');
+            else if (role === 'lecturer') $('#login-page-lecturer').classList.add('hidden');
+            else if (role === 'student') $('#login-page-student').classList.add('hidden');
+            document.querySelectorAll(`#login-page-${role} input`).forEach(inp => inp.value = '');
+            showRoleSelection();
+        }
+
+        function handleDedicatedLogin(e, role) {
+            e.preventDefault();
+            let user = null;
+            if (role === 'admin') {
+                const email = $('#admin-login-email')?.value.trim();
+                const password = $('#admin-login-password')?.value.trim();
+                if (!email || !password) { showToast('Please fill all fields', 'error'); return; }
+                if (email === 'admin@university.edu' && password === 'admin123') {
+                    user = { id: 'ADMIN001', fullName: 'System Administrator', role: 'admin', email: email };
+                }
+            } else if (role === 'lecturer') {
+                const email = $('#lecturer-login-email')?.value.trim();
+                const password = $('#lecturer-login-password')?.value.trim();
+                if (!email || !password) { showToast('Please fill all fields', 'error'); return; }
+                user = APP.data.lecturers.find(l => l.email.toLowerCase() === email.toLowerCase() && l.password === password);
+                if (user) user.role = 'lecturer';
+            } else if (role === 'student') {
+                const regNo = $('#student-login-regno')?.value.trim();
+                const password = $('#student-login-password')?.value.trim();
+                if (!regNo || !password) { showToast('Please fill all fields', 'error'); return; }
+                user = APP.data.students.find(s => s.regNo.toLowerCase() === regNo.toLowerCase() && s.password === password);
+                if (user) user.role = 'student';
+            }
+            if (!user) { showToast('Invalid credentials. Please try again.', 'error'); return; }
+            APP.currentUser = user;
+            APP.currentRole = role;
+            $('#login-page-admin').classList.add('hidden');
+            $('#login-page-lecturer').classList.add('hidden');
+            $('#login-page-student').classList.add('hidden');
+            $('#role-selection-overlay').classList.add('hidden');
+            document.querySelectorAll('#login-page-admin input, #login-page-lecturer input, #login-page-student input').forEach(inp => inp.value = '');
+            showDashboard();
+            showToast(`Welcome, ${user.fullName || user.regNo}!`, 'success');
+        }
+
+        function logout() {
+            APP.currentUser = null;
+            APP.currentRole = null;
+            $('#dashboard-container').classList.add('hidden');
+            $('#landing-page').classList.remove('hidden');
+            $('#sidebar').classList.add('-translate-x-full');
+            Object.values(APP.charts).forEach(c => { try { c.destroy(); } catch (e) {} });
+            APP.charts = {};
+            showToast('Logged out successfully', 'info');
+        }
+
+        // ==================== DASHBOARD ROUTING ====================
+        function showDashboard() {
+            $('#landing-page').classList.add('hidden');
+            $('#dashboard-container').classList.remove('hidden');
+            $('#user-display-name').textContent = APP.currentUser.fullName || APP.currentUser.regNo || 'User';
+            $('#user-avatar').textContent = (APP.currentUser.fullName || 'U').charAt(0).toUpperCase();
+            $('#dashboard-title').textContent = APP.currentRole.charAt(0).toUpperCase() + APP.currentRole.slice(1) + ' Dashboard';
+            buildSidebar();
+            if (APP.currentRole === 'admin') renderAdminDashboard();
+            else if (APP.currentRole === 'lecturer') renderLecturerDashboard();
+            else if (APP.currentRole === 'student') renderStudentDashboard();
+            if (window.innerWidth < 768) $('#sidebar').classList.add('-translate-x-full');
+        }
+
+        function buildSidebar() {
+            const nav = $('#sidebar-nav');
+            let links = [];
+            if (APP.currentRole === 'admin') {
+                links = [
+                    { icon: 'fa-th-large', label: 'Overview', action: 'renderAdminDashboard' },
+                    { icon: 'fa-user-plus', label: 'Register Student', action: 'renderStudentRegistration' },
+                    { icon: 'fa-chalkboard-user', label: 'Register Lecturer', action: 'renderLecturerRegistration' },
+                    { icon: 'fa-users', label: 'Student Management', action: 'renderStudentManagement' },
+                    { icon: 'fa-user-tie', label: 'Lecturer Management', action: 'renderLecturerManagement' },
+                    { icon: 'fa-book', label: 'Course Management', action: 'renderCourseManagement' },
+                    { icon: 'fa-calendar-alt', label: 'Semester Management', action: 'renderSemesterManagement' },
+                    { icon: 'fa-flag', label: 'Student Reports', action: 'renderStudentReports' },
+                    { icon: 'fa-flag-checkered', label: 'Lecturer Reports', action: 'renderLecturerReports' },
+                ];
+            } else if (APP.currentRole === 'lecturer') {
+                links = [
+                    { icon: 'fa-th-large', label: 'Dashboard', action: 'renderLecturerDashboard' },
+                    { icon: 'fa-flag', label: 'Report', action: 'renderLecturerReportPage' },
+                ];
+            } else if (APP.currentRole === 'student') {
+                links = [
+                    { icon: 'fa-th-large', label: 'Dashboard', action: 'renderStudentDashboard' },
+                    { icon: 'fa-flag', label: 'Report', action: 'renderStudentReportPage' },
+                ];
+            }
+            nav.innerHTML = links.map((l, i) => `
+            <div class="sidebar-link ${i === 0 ? 'active' : ''}" onclick="setActiveSidebar(this); ${l.action}()">
+              <i class="fas ${l.icon} w-5 text-center"></i> ${l.label}
+            </div>`).join('');
+        }
+
+        function setActiveSidebar(el) {
+            $$('.sidebar-link').forEach(l => l.classList.remove('active'));
+            el.classList.add('active');
+        }
+
+        // ==================== ADMIN DASHBOARD ====================
+        function renderAdminDashboard() {
+            const totalStudents = APP.data.students.length;
+            const totalLecturers = APP.data.lecturers.length;
+            const totalCourses = APP.data.courses.length;
+            const todayDate = new Date().toISOString().split('T')[0];
+            const todayClasses = Object.values(APP.data.classSessions).flat().filter(s => s.date === todayDate).length;
+            let totalSessions = 0;
+            Object.values(APP.data.classSessions).forEach(sessions => { totalSessions += sessions.length; });
+            const totalStudentReports = APP.data.studentReports.length;
+            const totalLecturerReports = APP.data.lecturerReports.length;
+            const html = `
+            <div class="fade-in">
+              <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">Admin Overview</h1>
+              <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-8">
+                ${statCard('fa-users', 'Total Students', totalStudents, 'bg-blue-500')}
+                ${statCard('fa-user-tie', 'Total Lecturers', totalLecturers, 'bg-green-500')}
+                ${statCard('fa-building', 'Departments', 1, 'bg-purple-500')}
+                ${statCard('fa-book', 'Courses', totalCourses, 'bg-orange-500')}
+                ${statCard('fa-calendar-check', 'Classes Held Today', todayClasses, 'bg-cyan-500')}
+                ${statCard('fa-clipboard-list', 'Total Sessions', totalSessions, 'bg-pink-500')}
+                ${statCard('fa-flag', 'Student Reports', totalStudentReports, 'bg-yellow-500')}
+                ${statCard('fa-flag-checkered', 'Lecturer Reports', totalLecturerReports, 'bg-indigo-500')}
+              </div>
+              <div class="grid lg:grid-cols-2 gap-6">
+                <div class="glass rounded-2xl p-6"><h3 class="font-semibold text-gray-900 dark:text-white mb-4">Students per Level</h3><canvas id="chart-levels" height="220"></canvas></div>
+                <div class="glass rounded-2xl p-6"><h3 class="font-semibold text-gray-900 dark:text-white mb-4">Course Enrollment</h3><canvas id="chart-courses" height="220"></canvas></div>
+              </div>
+            </div>`;
+            $('#main-content-area').innerHTML = html;
+            setTimeout(() => { renderChartLevels(); renderChartCourses(); }, 200);
+        }
+
+        function statCard(icon, label, value, colorClass) {
+            return `
+            <div class="glass rounded-2xl p-5 card-hover text-center">
+              <div class="w-10 h-10 ${colorClass} rounded-xl flex items-center justify-center mx-auto mb-3"><i class="fas ${icon} text-white"></i></div>
+              <p class="text-2xl font-bold text-gray-900 dark:text-white">${value}</p>
+              <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">${label}</p>
+            </div>`;
+        }
+
+        function renderChartLevels() {
+            const levels = ['100', '200', '300', '400', '500', '600'];
+            const counts = levels.map(l => APP.data.students.filter(s => s.level === l).length);
+            const ctx = document.getElementById('chart-levels');
+            if (!ctx) return;
+            if (APP.charts.levels) APP.charts.levels.destroy();
+            APP.charts.levels = new Chart(ctx, {
+                type: 'bar',
+                data: { labels: levels.map(l => l + ' Level'), datasets: [{ label: 'Students', data: counts, backgroundColor: ['#3b82f6', '#60a5fa', '#93c5fd', '#2563eb', '#1d4ed8', '#1e40af'], borderRadius: 8, borderSkipped: false }] },
+                options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 5 } } } }
+            });
+        }
+
+        function renderChartCourses() {
+            const courseNames = APP.data.courses.map(c => c.name);
+            const enrollments = courseNames.map(cn => APP.data.students.filter(s => s.courses.includes(APP.data.courses.find(c => c.name === cn)?.id)).length);
+            const ctx = document.getElementById('chart-courses');
+            if (!ctx) return;
+            if (APP.charts.courses) APP.charts.courses.destroy();
+            APP.charts.courses = new Chart(ctx, {
+                type: 'doughnut',
+                data: { labels: courseNames, datasets: [{ data: enrollments, backgroundColor: ['#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#06b6d4', '#f43f5e', '#6366f1', '#14b8a6'], borderWidth: 2, borderColor: 'transparent' }] },
+                options: { responsive: true, plugins: { legend: { position: 'bottom', labels: { padding: 16, usePointStyle: true, pointStyleWidth: 8 } } } }
+            });
+        }
+
+        function updateChartsTheme() {
+            Object.values(APP.charts).forEach(c => { try { c.update(); } catch (e) {} });
+        }
+
+        // ==================== STUDENT REGISTRATION ====================
+        function renderStudentRegistration() {
+            const html = `
+            <div class="fade-in max-w-2xl mx-auto">
+              <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">Register New Student</h1>
+              <div class="glass rounded-2xl p-6 space-y-4">
+                <div class="grid md:grid-cols-2 gap-4">
+                  <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Full Name *</label><input id="reg-stu-name" type="text" class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                  <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Registration Number *</label><input id="reg-stu-regno" type="text" placeholder="MCT/2025/001" class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                  <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Level *</label><select id="reg-stu-level" class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none"><option value="">Select Level</option>${['100','200','300','400','500','600'].map(l=>`<option value="${l}">${l} Level</option>`).join('')}</select></div>
+                  <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Department</label><select id="reg-stu-dept" class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none"><option value="MCT">MCT - Mechatronics Engineering</option></select></div>
+                  <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email *</label><input id="reg-stu-email" type="email" class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                  <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Password *</label><input id="reg-stu-password" type="password" class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Min 6 characters"></div>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">RFID UID</label>
+                  <div class="flex gap-3">
+                    <input id="reg-stu-rfid" type="text" readonly class="flex-1 px-4 py-3 rounded-xl border border-gray-300 dark:border-slate-600 bg-gray-100 dark:bg-slate-600 text-gray-700 dark:text-gray-200 outline-none" placeholder="Click fetch to scan RFID...">
+                    <button onclick="fetchRfidUid()" id="rfid-fetch-btn" class="px-5 py-3 bg-cyan-500 hover:bg-cyan-600 text-white rounded-xl font-medium transition-all flex items-center gap-2"><i class="fas fa-wifi"></i> Fetch UID</button>
+                  </div>
+                  <p class="text-xs text-gray-400 mt-1">Scan the RFID card on the SAMS device, then click Fetch.</p>
+                </div>
+                <button onclick="registerStudent()" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3.5 rounded-xl font-semibold transition-all shadow-lg mt-4">Register Student</button>
+              </div>
+            </div>`;
+            $('#main-content-area').innerHTML = html;
+        }
+
+        async function fetchRfidUid() {
+            const btn = $('#rfid-fetch-btn');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Waiting for scan...';
+            btn.classList.add('opacity-70');
+            showToast('Waiting for RFID scan... Place card on the SAMS device.', 'info');
+            const uid = await simulateRfidScan();
+            $('#reg-stu-rfid').value = uid;
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-wifi"></i> Fetch UID';
+            btn.classList.remove('opacity-70');
+            showToast('RFID UID captured successfully!', 'success');
+        }
+
+        function simulateRfidScan() {
+            return new Promise((resolve) => {
+                const delay = Math.random() * 3000 + 2000;
+                setTimeout(() => {
+                    const uid = 'RFID-' + Math.random().toString(36).substring(2, 8).toUpperCase();
+                    resolve(uid);
+                }, delay);
+            });
+        }
+
+        function registerStudent() {
+            const name = $('#reg-stu-name')?.value.trim();
+            const regNo = $('#reg-stu-regno')?.value.trim();
+            const level = $('#reg-stu-level')?.value;
+            const dept = $('#reg-stu-dept')?.value;
+            const email = $('#reg-stu-email')?.value.trim();
+            const password = $('#reg-stu-password')?.value.trim();
+            const rfidUid = $('#reg-stu-rfid')?.value.trim();
+            if (!name || !regNo || !level || !dept || !email || !password) { showToast('Please fill all required fields', 'error'); return; }
+            if (password.length < 6) { showToast('Password must be at least 6 characters', 'error'); return; }
+            if (!rfidUid) { showToast('Please fetch RFID UID first', 'warning'); return; }
+            if (APP.data.students.find(s => s.regNo.toLowerCase() === regNo.toLowerCase())) { showToast('Student with this registration number already exists', 'error'); return; }
+            const newStudent = {
+                id: 'STU' + String(APP.data.students.length + 1).padStart(3, '0'),
+                fullName: name, regNo: regNo, department: dept, level: level, faculty: 'Engineering',
+                email: email, phone: '', rfidUid: rfidUid, password: password,
+                courses: APP.data.courses.map(c => c.id),
+            };
+            APP.data.students.push(newStudent);
+            if (!APP.data.attendance[newStudent.id]) APP.data.attendance[newStudent.id] = {};
+            APP.data.courses.forEach(c => {
+                if (!APP.data.attendance[newStudent.id][c.id]) {
+                    APP.data.attendance[newStudent.id][c.id] = { sessions: {} };
+                }
+            });
+            saveState();
+            showToast(`Student ${name} registered successfully!`, 'success');
+            renderStudentRegistration();
+        }
+
+        // ==================== LECTURER REGISTRATION ====================
+        function renderLecturerRegistration() {
+            const courseOptions = APP.data.courses.map(c => `<option value="${c.id}">${c.name} - ${c.title}</option>`).join('');
+            const html = `
+            <div class="fade-in max-w-2xl mx-auto">
+              <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">Register New Lecturer</h1>
+              <div class="glass rounded-2xl p-6 space-y-4">
+                <div class="grid md:grid-cols-2 gap-4">
+                  <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Full Name *</label><input id="reg-lec-name" type="text" class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                  <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Staff ID</label><input id="reg-lec-staffid" type="text" placeholder="STF-ENG-003" class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                  <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email *</label><input id="reg-lec-email" type="email" class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                  <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Phone</label><input id="reg-lec-phone" type="text" class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                  <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Department</label><select id="reg-lec-dept" class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none"><option value="MCT">MCT - Mechatronics Engineering</option></select></div>
+                  <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Password *</label><input id="reg-lec-password" type="password" class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Min 6 characters"></div>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Assigned Courses *</label>
+                  <select id="reg-lec-courses" multiple class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none min-h-[140px]">${courseOptions}</select>
+                  <p class="text-xs text-gray-400 mt-1">Hold Ctrl/Cmd to select multiple courses</p>
+                </div>
+                <button onclick="registerLecturer()" class="w-full bg-green-600 hover:bg-green-700 text-white py-3.5 rounded-xl font-semibold transition-all shadow-lg mt-4">Register Lecturer</button>
+              </div>
+            </div>`;
+            $('#main-content-area').innerHTML = html;
+        }
+
+        function registerLecturer() {
+            const name = $('#reg-lec-name')?.value.trim();
+            const staffId = $('#reg-lec-staffid')?.value.trim();
+            const email = $('#reg-lec-email')?.value.trim();
+            const phone = $('#reg-lec-phone')?.value.trim();
+            const dept = $('#reg-lec-dept')?.value;
+            const password = $('#reg-lec-password')?.value.trim();
+            const coursesSelect = $('#reg-lec-courses');
+            const selectedCourses = Array.from(coursesSelect?.selectedOptions || []).map(o => o.value);
+            if (!name || !email || !password) { showToast('Please fill all required fields', 'error'); return; }
+            if (selectedCourses.length === 0) { showToast('Please select at least one course', 'error'); return; }
+            const newLecturer = {
+                id: 'LEC' + String(APP.data.lecturers.length + 1).padStart(3, '0'),
+                fullName: name, staffId: staffId || 'STF-ENG-' + String(APP.data.lecturers.length + 1).padStart(3, '0'),
+                email: email, phone: phone, department: dept, password: password, assignedCourses: selectedCourses,
+            };
+            APP.data.lecturers.push(newLecturer);
+            saveState();
+            showToast(`Lecturer ${name} registered successfully!`, 'success');
+            renderLecturerRegistration();
+        }
+
+        // ==================== STUDENT MANAGEMENT ====================
+        function renderStudentManagement() {
+            const students = APP.data.students;
+            const departments = [...new Set(students.map(s => s.department))];
+            const levels = [...new Set(students.map(s => s.level))].sort();
+            const html = `
+            <div class="fade-in">
+              <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">Student Management</h1>
+              <div class="flex flex-wrap gap-3 mb-4 items-center">
+                <button onclick="openStudentExportModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl font-medium"><i class="fas fa-cloud-upload-alt mr-2"></i>Export / Download</button>
+              </div>
+              <div class="glass rounded-2xl p-4 mb-4 flex flex-wrap gap-3">
+                <input type="search" id="stu-search" placeholder="Search by name or reg no..." class="flex-1 min-w-[200px] px-4 py-2.5 rounded-xl border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500" oninput="filterStudentTable()">
+                <select id="stu-filter-dept" onchange="filterStudentTable()" class="px-4 py-2.5 rounded-xl border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white outline-none"><option value="">All Departments</option>${departments.map(d=>`<option value="${d}">${d}</option>`).join('')}</select>
+                <select id="stu-filter-level" onchange="filterStudentTable()" class="px-4 py-2.5 rounded-xl border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white outline-none"><option value="">All Levels</option>${levels.map(l=>`<option value="${l}">${l} Level</option>`).join('')}</select>
+              </div>
+              <div class="glass rounded-2xl overflow-x-auto">
+                <table class="w-full text-sm text-left">
+                  <thead class="bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-200">
+                    <tr><th class="px-4 py-3">Name</th><th class="px-4 py-3">Reg No</th><th class="px-4 py-3">Dept</th><th class="px-4 py-3">Level</th><th class="px-4 py-3">Email</th><th class="px-4 py-3">RFID UID</th><th class="px-4 py-3">Actions</th></tr>
+                  </thead>
+                  <tbody id="stu-table-body" class="divide-y divide-gray-200 dark:divide-slate-600"></tbody>
+                </table>
+              </div>
+            </div>`;
+            $('#main-content-area').innerHTML = html;
+            filterStudentTable();
+        }
+
+        function openStudentExportModal() {
+            const levels = [...new Set(APP.data.students.map(s => s.level))].sort();
+            const html = `
+            <div class="fade-in max-w-md mx-auto">
+              <button onclick="renderStudentManagement()" class="mb-4 text-blue-600 font-medium"><i class="fas fa-arrow-left mr-2"></i>Back</button>
+              <div class="glass rounded-2xl p-6 space-y-4">
+                <h2 class="text-xl font-bold text-gray-900 dark:text-white">Export / Download Students</h2>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Select Level</label>
+                  <select id="export-level" class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white"><option value="">All Levels</option>${levels.map(l=>`<option value="${l}">${l} Level</option>`).join('')}</select>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Export Type</label>
+                  <select id="export-type" class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white">
+                    <option value="full">Full File (All details)</option>
+                    <option value="updates">Updates (UID, Password, Email etc.)</option>
+                  </select>
+                </div>
+                <div class="flex gap-3">
+                  <button onclick="exportStudentsToFirebase()" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-semibold"><i class="fas fa-cloud-upload-alt mr-2"></i>Export to Firebase</button>
+                  <button onclick="downloadStudentsCSV()" class="flex-1 bg-green-600 hover:bg-green-700 text-white py-3 rounded-xl font-semibold"><i class="fas fa-download mr-2"></i>Download CSV</button>
+                </div>
+              </div>
+            </div>`;
+            $('#main-content-area').innerHTML = html;
+        }
+
+        function getFilteredStudentsForExport() {
+            const level = $('#export-level')?.value || '';
+            let filtered = APP.data.students;
+            if (level) filtered = filtered.filter(s => s.level === level);
+            return filtered;
+        }
+
+        function exportStudentsToFirebase() {
+            const students = getFilteredStudentsForExport();
+            if (students.length === 0) { showToast('No students to export.', 'warning'); return; }
+            // Simulate Firebase export
+            console.log('Exporting to Firebase:', students);
+            showToast(`Successfully exported ${students.length} students to Firebase!`, 'success');
+        }
+
+        function downloadStudentsCSV() {
+            const students = getFilteredStudentsForExport();
+            if (students.length === 0) { showToast('No students to download.', 'warning'); return; }
+            const exportType = $('#export-type')?.value || 'full';
+            let csv = 'Full Name,Reg No,Department,Level,Email,Phone,RFID UID';
+            if (exportType === 'updates') csv += ',Password';
+            csv += '\n';
+            students.forEach(s => {
+                let row = `${s.fullName},${s.regNo},${s.department},${s.level},${s.email},${s.phone || ''},${s.rfidUid}`;
+                if (exportType === 'updates') row += `,${s.password}`;
+                csv += row + '\n';
+            });
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `students_export_${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast('CSV downloaded successfully!', 'success');
+        }
+
+        function filterStudentTable() {
+            const search = ($('#stu-search')?.value || '').toLowerCase();
+            const dept = $('#stu-filter-dept')?.value || '';
+            const level = $('#stu-filter-level')?.value || '';
+            let filtered = APP.data.students;
+            if (search) filtered = filtered.filter(s => s.fullName.toLowerCase().includes(search) || s.regNo.toLowerCase().includes(search));
+            if (dept) filtered = filtered.filter(s => s.department === dept);
+            if (level) filtered = filtered.filter(s => s.level === level);
+            const tbody = $('#stu-table-body');
+            if (!tbody) return;
+            tbody.innerHTML = filtered.map(s => `
+            <tr class="hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors">
+              <td class="px-4 py-3 font-medium text-gray-900 dark:text-white">${s.fullName}</td>
+              <td class="px-4 py-3 text-gray-600 dark:text-gray-300">${s.regNo}</td>
+              <td class="px-4 py-3">${s.department}</td>
+              <td class="px-4 py-3">${s.level}</td>
+              <td class="px-4 py-3 text-gray-500">${s.email}</td>
+              <td class="px-4 py-3"><span class="bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 px-2 py-1 rounded-lg text-xs font-mono">${s.rfidUid}</span></td>
+              <td class="px-4 py-3">
+                <div class="flex gap-2">
+                  <button onclick="viewStudentProfile('${s.id}')" class="p-2 bg-blue-100 dark:bg-blue-900/40 text-blue-600 rounded-lg hover:bg-blue-200 transition-colors" title="View"><i class="fas fa-eye"></i></button>
+                  <button onclick="editStudentModal('${s.id}')" class="p-2 bg-yellow-100 dark:bg-yellow-900/40 text-yellow-600 rounded-lg hover:bg-yellow-200 transition-colors" title="Edit"><i class="fas fa-edit"></i></button>
+                  <button onclick="deleteStudent('${s.id}')" class="p-2 bg-red-100 dark:bg-red-900/40 text-red-600 rounded-lg hover:bg-red-200 transition-colors" title="Delete"><i class="fas fa-trash"></i></button>
+                </div>
+              </td>
+            </tr>`).join('') || '<tr><td colspan="7" class="px-4 py-8 text-center text-gray-400">No students found</td></tr>';
+        }
+
+        function viewStudentProfile(studentId) {
+            const s = APP.data.students.find(st => st.id === studentId);
+            if (!s) return;
+            const html = `
+            <div class="fade-in max-w-2xl mx-auto">
+              <button onclick="renderStudentManagement()" class="mb-4 text-blue-600 hover:text-blue-700 font-medium"><i class="fas fa-arrow-left mr-2"></i>Back to list</button>
+              <div class="glass rounded-2xl p-6 space-y-3">
+                <h2 class="text-xl font-bold text-gray-900 dark:text-white">${s.fullName}</h2>
+                <div class="grid grid-cols-2 gap-3 text-sm"><div><span class="text-gray-500">Reg No:</span> <span class="font-medium text-gray-900 dark:text-white">${s.regNo}</span></div><div><span class="text-gray-500">Department:</span> <span class="font-medium">${s.department}</span></div><div><span class="text-gray-500">Level:</span> <span class="font-medium">${s.level}</span></div><div><span class="text-gray-500">Faculty:</span> <span class="font-medium">${s.faculty}</span></div><div><span class="text-gray-500">Email:</span> <span class="font-medium">${s.email}</span></div><div><span class="text-gray-500">RFID UID:</span> <span class="font-mono text-blue-600">${s.rfidUid}</span></div><div><span class="text-gray-500">Phone:</span> <span class="font-medium">${s.phone||'N/A'}</span></div></div>
+                <div><span class="text-gray-500 text-sm">Enrolled Courses:</span> <div class="flex flex-wrap gap-2 mt-1">${s.courses.map(cid=>`<span class="bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 px-2 py-1 rounded-lg text-xs">${cid}</span>`).join('')}</div></div>
+              </div>
+            </div>`;
+            $('#main-content-area').innerHTML = html;
+        }
+
+        function editStudentModal(studentId) {
+            const s = APP.data.students.find(st => st.id === studentId);
+            if (!s) return;
+            const html = `
+            <div class="fade-in max-w-2xl mx-auto">
+              <button onclick="renderStudentManagement()" class="mb-4 text-blue-600 hover:text-blue-700 font-medium"><i class="fas fa-arrow-left mr-2"></i>Back to list</button>
+              <div class="glass rounded-2xl p-6 space-y-4">
+                <h2 class="text-xl font-bold text-gray-900 dark:text-white">Edit Student: ${s.fullName}</h2>
+                <div class="grid md:grid-cols-2 gap-4">
+                  <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Full Name</label><input id="edit-stu-name" type="text" value="${s.fullName}" class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                  <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Registration Number</label><input id="edit-stu-regno" type="text" value="${s.regNo}" class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                  <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Level</label><select id="edit-stu-level" class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none">${['100','200','300','400','500','600'].map(l=>`<option value="${l}" ${s.level===l?'selected':''}>${l} Level</option>`).join('')}</select></div>
+                  <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Department</label><select id="edit-stu-dept" class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none"><option value="MCT" ${s.department==='MCT'?'selected':''}>MCT - Mechatronics Engineering</option></select></div>
+                  <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email</label><input id="edit-stu-email" type="email" value="${s.email}" class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                  <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Phone</label><input id="edit-stu-phone" type="text" value="${s.phone||''}" class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                  <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">RFID UID</label><input id="edit-stu-rfid" type="text" value="${s.rfidUid}" class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                  <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">New Password <span class="text-xs text-gray-400">(leave blank to keep current)</span></label><input id="edit-stu-password" type="password" class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none" placeholder="New password (optional)"></div>
+                </div>
+                <button onclick="saveStudentEdit('${studentId}')" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3.5 rounded-xl font-semibold transition-all shadow-lg mt-4">Save Changes</button>
+              </div>
+            </div>`;
+            $('#main-content-area').innerHTML = html;
+        }
+
+        function saveStudentEdit(studentId) {
+            const s = APP.data.students.find(st => st.id === studentId);
+            if (!s) return;
+            const name = $('#edit-stu-name')?.value.trim();
+            const regNo = $('#edit-stu-regno')?.value.trim();
+            const level = $('#edit-stu-level')?.value;
+            const dept = $('#edit-stu-dept')?.value;
+            const email = $('#edit-stu-email')?.value.trim();
+            const phone = $('#edit-stu-phone')?.value.trim();
+            const rfidUid = $('#edit-stu-rfid')?.value.trim();
+            const password = $('#edit-stu-password')?.value.trim();
+            if (!name || !regNo || !email) { showToast('Name, Reg No, and Email are required', 'error'); return; }
+            const dup = APP.data.students.find(st => st.regNo.toLowerCase() === regNo.toLowerCase() && st.id !== studentId);
+            if (dup) { showToast('Another student already has this registration number', 'error'); return; }
+            s.fullName = name; s.regNo = regNo; s.level = level; s.department = dept; s.email = email; s.phone = phone; s.rfidUid = rfidUid;
+            if (password && password.length >= 6) s.password = password;
+            else if (password && password.length < 6) { showToast('Password must be at least 6 characters (not updated)', 'warning'); }
+            saveState();
+            showToast('Student updated successfully!', 'success');
+            renderStudentManagement();
+        }
+
+        function deleteStudent(studentId) {
+            showConfirm('Are you sure you want to delete this student?', () => {
+                APP.data.students = APP.data.students.filter(s => s.id !== studentId);
+                delete APP.data.attendance[studentId];
+                APP.data.studentReports = APP.data.studentReports.filter(r => r.studentId !== studentId);
+                saveState();
+                showToast('Student deleted successfully', 'success');
+                renderStudentManagement();
+            });
+        }
+
+        // ==================== LECTURER MANAGEMENT ====================
+        function renderLecturerManagement() {
+            const lecturers = APP.data.lecturers;
+            const html = `
+            <div class="fade-in">
+              <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">Lecturer Management</h1>
+              <div class="glass rounded-2xl p-4 mb-4">
+                <input type="search" id="lec-search" placeholder="Search lecturers..." class="w-full max-w-md px-4 py-2.5 rounded-xl border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500" oninput="filterLecturerTable()">
+              </div>
+              <div class="glass rounded-2xl overflow-x-auto">
+                <table class="w-full text-sm text-left">
+                  <thead class="bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-200"><tr><th class="px-4 py-3">Name</th><th class="px-4 py-3">Staff ID</th><th class="px-4 py-3">Email</th><th class="px-4 py-3">Dept</th><th class="px-4 py-3">Courses</th><th class="px-4 py-3">Actions</th></tr></thead>
+                  <tbody id="lec-table-body" class="divide-y divide-gray-200 dark:divide-slate-600"></tbody>
+                </table>
+              </div>
+            </div>`;
+            $('#main-content-area').innerHTML = html;
+            filterLecturerTable();
+        }
+
+        function filterLecturerTable() {
+            const search = ($('#lec-search')?.value || '').toLowerCase();
+            let filtered = APP.data.lecturers;
+            if (search) filtered = filtered.filter(l => l.fullName.toLowerCase().includes(search) || l.email.toLowerCase().includes(search));
+            const tbody = $('#lec-table-body');
+            if (!tbody) return;
+            tbody.innerHTML = filtered.map(l => `
+            <tr class="hover:bg-gray-50 dark:hover:bg-slate-700/50">
+              <td class="px-4 py-3 font-medium text-gray-900 dark:text-white">${l.fullName}</td>
+              <td class="px-4 py-3">${l.staffId}</td>
+              <td class="px-4 py-3 text-gray-500">${l.email}</td>
+              <td class="px-4 py-3">${l.department}</td>
+              <td class="px-4 py-3"><div class="flex flex-wrap gap-1">${l.assignedCourses.map(c=>`<span class="bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300 px-2 py-0.5 rounded text-xs">${c}</span>`).join('')}</div></td>
+              <td class="px-4 py-3"><div class="flex gap-2">
+                <button onclick="editLecturerModal('${l.id}')" class="p-2 bg-yellow-100 dark:bg-yellow-900/40 text-yellow-600 rounded-lg hover:bg-yellow-200 transition-colors" title="Edit"><i class="fas fa-edit"></i></button>
+                <button onclick="assignCoursesToLecturer('${l.id}')" class="p-2 bg-purple-100 dark:bg-purple-900/40 text-purple-600 rounded-lg hover:bg-purple-200 transition-colors" title="Assign Courses"><i class="fas fa-book"></i></button>
+                <button onclick="deleteLecturer('${l.id}')" class="p-2 bg-red-100 dark:bg-red-900/40 text-red-600 rounded-lg hover:bg-red-200 transition-colors" title="Delete"><i class="fas fa-trash"></i></button>
+              </div></td>
+            </tr>`).join('') || '<tr><td colspan="6" class="px-4 py-8 text-center text-gray-400">No lecturers found</td></tr>';
+        }
+
+        function editLecturerModal(lecId) {
+            const lec = APP.data.lecturers.find(l => l.id === lecId);
+            if (!lec) return;
+            const html = `
+            <div class="fade-in max-w-2xl mx-auto">
+              <button onclick="renderLecturerManagement()" class="mb-4 text-blue-600 font-medium"><i class="fas fa-arrow-left mr-2"></i>Back</button>
+              <div class="glass rounded-2xl p-6 space-y-4">
+                <h2 class="text-xl font-bold text-gray-900 dark:text-white">Edit Lecturer: ${lec.fullName}</h2>
+                <div class="grid md:grid-cols-2 gap-4">
+                  <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Full Name</label><input id="edit-lec-name" type="text" value="${lec.fullName}" class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                  <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Staff ID</label><input id="edit-lec-staffid" type="text" value="${lec.staffId}" class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                  <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email</label><input id="edit-lec-email" type="email" value="${lec.email}" class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                  <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Phone</label><input id="edit-lec-phone" type="text" value="${lec.phone||''}" class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                  <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Department</label><select id="edit-lec-dept" class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none"><option value="MCT" ${lec.department==='MCT'?'selected':''}>MCT - Mechatronics Engineering</option></select></div>
+                  <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">New Password <span class="text-xs text-gray-400">(leave blank to keep current)</span></label><input id="edit-lec-password" type="password" class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none" placeholder="New password (optional)"></div>
+                </div>
+                <button onclick="saveLecturerEdit('${lecId}')" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3.5 rounded-xl font-semibold transition-all shadow-lg mt-4">Save Changes</button>
+              </div>
+            </div>`;
+            $('#main-content-area').innerHTML = html;
+        }
+
+        function saveLecturerEdit(lecId) {
+            const lec = APP.data.lecturers.find(l => l.id === lecId);
+            if (!lec) return;
+            const name = $('#edit-lec-name')?.value.trim();
+            const staffId = $('#edit-lec-staffid')?.value.trim();
+            const email = $('#edit-lec-email')?.value.trim();
+            const phone = $('#edit-lec-phone')?.value.trim();
+            const dept = $('#edit-lec-dept')?.value;
+            const password = $('#edit-lec-password')?.value.trim();
+            if (!name || !email) { showToast('Name and Email are required', 'error'); return; }
+            lec.fullName = name; lec.staffId = staffId; lec.email = email; lec.phone = phone; lec.department = dept;
+            if (password && password.length >= 6) lec.password = password;
+            else if (password && password.length < 6) { showToast('Password must be at least 6 characters (not updated)', 'warning'); }
+            saveState();
+            showToast('Lecturer updated successfully!', 'success');
+            renderLecturerManagement();
+        }
+
+        function assignCoursesToLecturer(lecId) {
+            const lec = APP.data.lecturers.find(l => l.id === lecId);
+            if (!lec) return;
+            const courseOptions = APP.data.courses.map(c => `<option value="${c.id}" ${lec.assignedCourses.includes(c.id)?'selected':''}>${c.name} - ${c.title}</option>`).join('');
+            const html = `
+            <div class="fade-in max-w-lg mx-auto">
+              <button onclick="renderLecturerManagement()" class="mb-4 text-blue-600 font-medium"><i class="fas fa-arrow-left mr-2"></i>Back</button>
+              <div class="glass rounded-2xl p-6">
+                <h3 class="font-semibold text-gray-900 dark:text-white mb-4">Assign Courses to ${lec.fullName}</h3>
+                <select id="assign-courses-select" multiple class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white min-h-[200px]">${courseOptions}</select>
+                <button onclick="saveAssignedCourses('${lecId}')" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-semibold mt-4">Save Changes</button>
+              </div>
+            </div>`;
+            $('#main-content-area').innerHTML = html;
+        }
+
+        function saveAssignedCourses(lecId) {
+            const lec = APP.data.lecturers.find(l => l.id === lecId);
+            if (!lec) return;
+            const select = $('#assign-courses-select');
+            lec.assignedCourses = Array.from(select.selectedOptions).map(o => o.value);
+            saveState();
+            showToast('Courses assigned successfully', 'success');
+            renderLecturerManagement();
+        }
+
+        function deleteLecturer(lecId) {
+            showConfirm('Delete this lecturer?', () => {
+                APP.data.lecturers = APP.data.lecturers.filter(l => l.id !== lecId);
+                APP.data.lecturerReports = APP.data.lecturerReports.filter(r => r.lecturerId !== lecId);
+                saveState();
+                showToast('Lecturer deleted', 'success');
+                renderLecturerManagement();
+            });
+        }
+
+        // ==================== COURSE MANAGEMENT ====================
+        function renderCourseManagement() {
+            const html = `
+            <div class="fade-in">
+              <div class="flex justify-between items-center mb-6">
+                <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Course Management</h1>
+                <button onclick="showAddCourseModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-medium transition-all"><i class="fas fa-plus mr-2"></i>Add Course</button>
+              </div>
+              <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4" id="course-cards-container"></div>
+            </div>`;
+            $('#main-content-area').innerHTML = html;
+            renderCourseCards();
+        }
+
+        function renderCourseCards() {
+            const container = $('#course-cards-container');
+            if (!container) return;
+            container.innerHTML = APP.data.courses.map(c => `
+            <div class="glass rounded-2xl p-5 card-hover">
+              <div class="flex justify-between items-start mb-3">
+                <span class="bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 px-3 py-1 rounded-lg text-sm font-bold">${c.name}</span>
+                <div class="flex gap-1">
+                  <button onclick="editCourse('${c.id}')" class="p-1.5 text-yellow-500 hover:bg-yellow-50 dark:hover:bg-yellow-900/20 rounded-lg"><i class="fas fa-edit text-sm"></i></button>
+                  <button onclick="deleteCourse('${c.id}')" class="p-1.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg"><i class="fas fa-trash text-sm"></i></button>
+                </div>
+              </div>
+              <h3 class="font-semibold text-gray-900 dark:text-white">${c.title}</h3>
+              <p class="text-xs text-gray-400 mt-2">ID: ${c.id} | Sessions held: ${(APP.data.classSessions[c.id]||[]).length}</p>
+            </div>`).join('');
+        }
+
+        function showAddCourseModal() {
+            const name = prompt('Enter course code (e.g., MCT 499):');
+            if (!name || !name.trim()) return;
+            const title = prompt('Enter course title:');
+            if (!title || !title.trim()) return;
+            const id = name.replace(/\s/g, '');
+            if (APP.data.courses.find(c => c.id === id)) { showToast('Course already exists', 'error'); return; }
+            APP.data.courses.push({ id, name: name.trim(), title: title.trim() });
+            APP.data.classSessions[id] = [];
+            APP.data.students.forEach(s => {
+                if (!s.courses.includes(id)) s.courses.push(id);
+                if (!APP.data.attendance[s.id]) APP.data.attendance[s.id] = {};
+                APP.data.attendance[s.id][id] = { sessions: {} };
+            });
+            saveState();
+            showToast('Course added successfully', 'success');
+            renderCourseCards();
+        }
+
+        function editCourse(courseId) {
+            const c = APP.data.courses.find(co => co.id === courseId);
+            if (!c) return;
+            const newTitle = prompt('Edit course title:', c.title);
+            if (newTitle && newTitle.trim()) { c.title = newTitle.trim(); saveState(); showToast('Course updated', 'success'); renderCourseCards(); }
+        }
+
+        function deleteCourse(courseId) {
+            showConfirm('Delete this course? It will be removed from all students and lecturers.', () => {
+                APP.data.courses = APP.data.courses.filter(c => c.id !== courseId);
+                APP.data.students.forEach(s => { s.courses = s.courses.filter(cid => cid !== courseId); });
+                APP.data.lecturers.forEach(l => { l.assignedCourses = l.assignedCourses.filter(cid => cid !== courseId); });
+                delete APP.data.classSessions[courseId];
+                Object.values(APP.data.attendance).forEach(courseData => { delete courseData[courseId]; });
+                saveState();
+                showToast('Course deleted', 'success');
+                renderCourseCards();
+            });
+        }
+
+        // ==================== SEMESTER MANAGEMENT ====================
+        function renderSemesterManagement() {
+            const active = APP.currentSemester;
+            const history = APP.semesterHistory || [];
+            let html = `
+            <div class="fade-in">
+              <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">Semester Management</h1>
+              <div class="glass rounded-2xl p-6 mb-6">
+                <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-3">Current Semester</h2>
+                ${active ? `
+                <div class="flex items-center justify-between">
+                  <div>
+                    <p class="font-medium text-gray-900 dark:text-white">${active.name}</p>
+                    <p class="text-sm text-gray-500">Started: ${active.startDate}</p>
+                  </div>
+                  <button onclick="endCurrentSemester()" class="bg-red-500 hover:bg-red-600 text-white px-5 py-2.5 rounded-xl font-medium"><i class="fas fa-stop-circle mr-2"></i>End Semester</button>
+                </div>` : `
+                <p class="text-gray-500 mb-4">No active semester. Start a new one to begin tracking.</p>
+                <button onclick="startNewSemesterPrompt()" class="bg-green-600 hover:bg-green-700 text-white px-5 py-2.5 rounded-xl font-medium"><i class="fas fa-play-circle mr-2"></i>Start New Semester</button>
+                `}
+              </div>
+              <div class="glass rounded-2xl p-6">
+                <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Previous Semesters</h2>
+                ${history.length === 0 ? '<p class="text-gray-400 text-sm">No past semesters archived yet.</p>' : `
+                <div class="space-y-3">
+                  ${history.map(h => `
+                  <div class="flex items-center justify-between bg-gray-50 dark:bg-slate-700/50 p-4 rounded-xl">
+                    <div>
+                      <p class="font-medium text-gray-900 dark:text-white">${h.name}</p>
+                      <p class="text-xs text-gray-500">${h.startDate} → ${h.endDate}</p>
+                      <p class="text-xs text-gray-500">Students: ${h.studentCount} | Lecturers: ${h.lecturerCount} | Courses: ${h.courseCount}</p>
+                    </div>
+                    <button onclick="viewSemesterDetails('${h.id}')" class="text-blue-600 hover:text-blue-800 text-sm font-medium"><i class="fas fa-eye mr-1"></i>View</button>
+                  </div>`).join('')}
+                </div>`}
+              </div>
+            </div>`;
+            $('#main-content-area').innerHTML = html;
+        }
+
+        function startNewSemesterPrompt() {
+            const name = prompt('Enter semester name (e.g., 2025/2026 First Semester):');
+            if (!name || !name.trim()) return;
+            APP.currentSemester = {
+                id: 'sem_' + Date.now(),
+                name: name.trim(),
+                startDate: new Date().toISOString().split('T')[0],
+                active: true
+            };
+            saveState();
+            showToast(`Semester "${name}" started successfully!`, 'success');
+            renderSemesterManagement();
+        }
+
+        function endCurrentSemester() {
+            if (!APP.currentSemester) return;
+            showConfirm('End the current semester? All current attendance and session data will be archived and cleared.', () => {
+                const semesterData = {
+                    ...APP.currentSemester,
+                    endDate: new Date().toISOString().split('T')[0],
+                    studentCount: APP.data.students.length,
+                    lecturerCount: APP.data.lecturers.length,
+                    courseCount: APP.data.courses.length,
+                    attendance: JSON.parse(JSON.stringify(APP.data.attendance)),
+                    classSessions: JSON.parse(JSON.stringify(APP.data.classSessions)),
+                    studentReports: JSON.parse(JSON.stringify(APP.data.studentReports)),
+                    lecturerReports: JSON.parse(JSON.stringify(APP.data.lecturerReports)),
+                };
+                APP.semesterHistory.push(semesterData);
+                // Clear attendance and sessions for new semester
+                APP.data.attendance = {};
+                APP.data.classSessions = {};
+                APP.data.courses.forEach(c => { APP.data.classSessions[c.id] = []; });
+                APP.data.studentReports = [];
+                APP.data.lecturerReports = [];
+                APP.currentSemester = null;
+                saveState();
+                showToast('Semester ended and archived.', 'success');
+                renderSemesterManagement();
+            });
+        }
+
+        function viewSemesterDetails(semId) {
+            const sem = APP.semesterHistory.find(s => s.id === semId);
+            if (!sem) return;
+            let html = `
+            <div class="fade-in">
+              <button onclick="renderSemesterManagement()" class="mb-4 text-blue-600 font-medium"><i class="fas fa-arrow-left mr-2"></i>Back</button>
+              <div class="glass rounded-2xl p-6">
+                <h2 class="text-xl font-bold text-gray-900 dark:text-white">${sem.name}</h2>
+                <p class="text-sm text-gray-500">${sem.startDate} → ${sem.endDate}</p>
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-4 my-4">
+                  <div class="text-center p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl"><p class="text-2xl font-bold text-blue-600">${sem.studentCount}</p><p class="text-xs text-gray-500">Students</p></div>
+                  <div class="text-center p-3 bg-green-50 dark:bg-green-900/20 rounded-xl"><p class="text-2xl font-bold text-green-600">${sem.lecturerCount}</p><p class="text-xs text-gray-500">Lecturers</p></div>
+                  <div class="text-center p-3 bg-purple-50 dark:bg-purple-900/20 rounded-xl"><p class="text-2xl font-bold text-purple-600">${sem.courseCount}</p><p class="text-xs text-gray-500">Courses</p></div>
+                </div>
+                <p class="text-sm text-gray-400">Attendance and session data archived. (Not displayed in detail)</p>
+              </div>
+            </div>`;
+            $('#main-content-area').innerHTML = html;
+        }
+
+        // ==================== STUDENT REPORTS (ADMIN) ====================
+        function renderStudentReports() {
+            const reports = APP.data.studentReports;
+            const html = `
+            <div class="fade-in">
+              <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">Student Reports</h1>
+              <p class="text-gray-500 dark:text-gray-400 mb-4 text-sm">Complaints and reports submitted by students</p>
+              <div class="glass rounded-2xl overflow-x-auto">
+                <table class="w-full text-sm text-left">
+                  <thead class="bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-200">
+                    <tr><th class="px-4 py-3">Student</th><th class="px-4 py-3">Reg No</th><th class="px-4 py-3">Subject</th><th class="px-4 py-3">Date</th><th class="px-4 py-3">Actions</th></tr>
+                  </thead>
+                  <tbody class="divide-y divide-gray-200 dark:divide-slate-600">
+                    ${reports.length === 0 ? '<tr><td colspan="5" class="px-4 py-8 text-center text-gray-400">No student reports yet</td></tr>' :
+                    reports.map(r => `
+                    <tr class="hover:bg-gray-50 dark:hover:bg-slate-700/50">
+                      <td class="px-4 py-3 font-medium text-gray-900 dark:text-white">${r.studentName}</td>
+                      <td class="px-4 py-3">${r.regNo}</td>
+                      <td class="px-4 py-3">${r.subject}</td>
+                      <td class="px-4 py-3 text-gray-500">${r.date}</td>
+                      <td class="px-4 py-3"><div class="flex gap-2">
+                        <button onclick="viewReportDetail('student','${r.id}')" class="p-2 bg-blue-100 dark:bg-blue-900/40 text-blue-600 rounded-lg hover:bg-blue-200 transition-colors"><i class="fas fa-eye"></i></button>
+                        <button onclick="deleteReport('student','${r.id}')" class="p-2 bg-red-100 dark:bg-red-900/40 text-red-600 rounded-lg hover:bg-red-200 transition-colors"><i class="fas fa-trash"></i></button>
+                      </div></td>
+                    </tr>`).join('')}
+                  </tbody>
+                </table>
+              </div>
+            </div>`;
+            $('#main-content-area').innerHTML = html;
+        }
+
+        function renderLecturerReports() {
+            const reports = APP.data.lecturerReports;
+            const html = `
+            <div class="fade-in">
+              <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">Lecturer Reports</h1>
+              <p class="text-gray-500 dark:text-gray-400 mb-4 text-sm">Complaints and reports submitted by lecturers</p>
+              <div class="glass rounded-2xl overflow-x-auto">
+                <table class="w-full text-sm text-left">
+                  <thead class="bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-200">
+                    <tr><th class="px-4 py-3">Lecturer</th><th class="px-4 py-3">Staff ID</th><th class="px-4 py-3">Subject</th><th class="px-4 py-3">Date</th><th class="px-4 py-3">Actions</th></tr>
+                  </thead>
+                  <tbody class="divide-y divide-gray-200 dark:divide-slate-600">
+                    ${reports.length === 0 ? '<tr><td colspan="5" class="px-4 py-8 text-center text-gray-400">No lecturer reports yet</td></tr>' :
+                    reports.map(r => `
+                    <tr class="hover:bg-gray-50 dark:hover:bg-slate-700/50">
+                      <td class="px-4 py-3 font-medium text-gray-900 dark:text-white">${r.lecturerName}</td>
+                      <td class="px-4 py-3">${r.staffId}</td>
+                      <td class="px-4 py-3">${r.subject}</td>
+                      <td class="px-4 py-3 text-gray-500">${r.date}</td>
+                      <td class="px-4 py-3"><div class="flex gap-2">
+                        <button onclick="viewReportDetail('lecturer','${r.id}')" class="p-2 bg-blue-100 dark:bg-blue-900/40 text-blue-600 rounded-lg hover:bg-blue-200 transition-colors"><i class="fas fa-eye"></i></button>
+                        <button onclick="deleteReport('lecturer','${r.id}')" class="p-2 bg-red-100 dark:bg-red-900/40 text-red-600 rounded-lg hover:bg-red-200 transition-colors"><i class="fas fa-trash"></i></button>
+                      </div></td>
+                    </tr>`).join('')}
+                  </tbody>
+                </table>
+              </div>
+            </div>`;
+            $('#main-content-area').innerHTML = html;
+        }
+
+        function viewReportDetail(type, reportId) {
+            const reports = type === 'student' ? APP.data.studentReports : APP.data.lecturerReports;
+            const r = reports.find(rp => rp.id === reportId);
+            if (!r) return;
+            const html = `
+            <div class="fade-in max-w-2xl mx-auto">
+              <button onclick="${type === 'student' ? 'renderStudentReports()' : 'renderLecturerReports()'}" class="mb-4 text-blue-600 font-medium"><i class="fas fa-arrow-left mr-2"></i>Back</button>
+              <div class="glass rounded-2xl p-6 space-y-3">
+                <h2 class="text-xl font-bold text-gray-900 dark:text-white">${r.subject}</h2>
+                <p class="text-sm text-gray-500">From: ${r.studentName || r.lecturerName} | ${r.regNo || r.staffId || ''} | ${r.date}</p>
+                <div class="bg-gray-50 dark:bg-slate-700 rounded-xl p-4 mt-3">
+                  <p class="text-gray-700 dark:text-gray-200 whitespace-pre-wrap">${r.message}</p>
+                </div>
+              </div>
+            </div>`;
+            $('#main-content-area').innerHTML = html;
+        }
+
+        function deleteReport(type, reportId) {
+            showConfirm('Delete this report?', () => {
+                if (type === 'student') APP.data.studentReports = APP.data.studentReports.filter(r => r.id !== reportId);
+                else APP.data.lecturerReports = APP.data.lecturerReports.filter(r => r.id !== reportId);
+                saveState();
+                showToast('Report deleted', 'success');
+                if (type === 'student') renderStudentReports();
+                else renderLecturerReports();
+            });
+        }
+
+        // ==================== LECTURER DASHBOARD & COURSE DETAILS ====================
+        function renderLecturerDashboard() {
+            const lec = APP.currentUser;
+            if (!lec || lec.role !== 'lecturer') return;
+            const assignedCourses = APP.data.courses.filter(c => lec.assignedCourses.includes(c.id));
+            const totalStudents = APP.data.students.length;
+            const todayDate = new Date().toISOString().split('T')[0];
+            const todayClasses = Object.values(APP.data.classSessions).flat().filter(s => s.date === todayDate).length;
+            const html = `
+            <div class="fade-in">
+              <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">Welcome, ${lec.fullName}</h1>
+              <p class="text-gray-500 dark:text-gray-400 mb-6">Lecturer Dashboard</p>
+              <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                ${statCard('fa-book', 'My Courses', assignedCourses.length, 'bg-blue-500')}
+                ${statCard('fa-users', 'Total Students', totalStudents, 'bg-green-500')}
+                ${statCard('fa-calendar-check', 'Classes Held Today', todayClasses, 'bg-cyan-500')}
+                ${statCard('fa-chart-bar', 'Attendance Avg', calculateOverallAvg(lec)+'%', 'bg-purple-500')}
+              </div>
+              <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">My Courses</h2>
+              <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4" id="lec-course-cards"></div>
+            </div>`;
+            $('#main-content-area').innerHTML = html;
+            const container = $('#lec-course-cards');
+            if (container) {
+                container.innerHTML = assignedCourses.map(c => {
+                    const enrolled = APP.data.students.filter(s => s.courses.includes(c.id)).length;
+                    const sessions = getClassesHeld(c.id);
+                    return `
+                  <div class="glass rounded-2xl p-5 card-hover cursor-pointer" onclick="viewLecturerCourseDetail('${c.id}')">
+                    <span class="bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 px-3 py-1 rounded-lg text-sm font-bold">${c.name}</span>
+                    <h3 class="font-semibold text-gray-900 dark:text-white mt-3">${c.title}</h3>
+                    <div class="flex gap-4 mt-3 text-xs text-gray-500"><span><i class="fas fa-users mr-1"></i> ${enrolled} students</span><span><i class="fas fa-clock mr-1"></i> ${sessions} classes</span></div>
+                  </div>`;
+                }).join('');
+            }
+        }
+
+        function calculateOverallAvg(lec) {
+            const courses = lec.assignedCourses;
+            if (courses.length === 0) return 0;
+            let totalPct = 0, count = 0;
+            APP.data.students.forEach(s => {
+                courses.forEach(cid => {
+                    if (s.courses.includes(cid)) { totalPct += getAttendancePercentage(s.id, cid); count++; }
+                });
+            });
+            return count > 0 ? Math.round(totalPct / count) : 0;
+        }
+
+        function viewLecturerCourseDetail(courseId) {
+            const course = APP.data.courses.find(c => c.id === courseId);
+            if (!course) return;
+            const students = APP.data.students.filter(s => s.courses.includes(courseId));
+            const totalHeld = getClassesHeld(courseId);
+            const records = students.map(s => {
+                const attended = getClassesAttended(s.id, courseId);
+                const pct = getAttendancePercentage(s.id, courseId);
+                return { ...s, classesAttended: attended, classesHeld: totalHeld, percentage: pct, eligible: pct >= 60 };
+            });
+            const presentCount = records.filter(r => r.classesAttended > 0).length;
+            const absentCount = records.length - presentCount;
+            const avgPct = records.length > 0 ? (records.reduce((a, b) => a + b.percentage, 0) / records.length).toFixed(1) : 0;
+            const html = `
+            <div class="fade-in">
+              <button onclick="renderLecturerDashboard()" class="mb-4 text-blue-600 font-medium"><i class="fas fa-arrow-left mr-2"></i>Back</button>
+              <h1 class="text-2xl font-bold text-gray-900 dark:text-white">${course.name} - ${course.title}</h1>
+              <div class="flex flex-wrap gap-3 my-4">
+                <button onclick="addClassSession('${courseId}')" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl font-medium"><i class="fas fa-plus-circle mr-2"></i>Add Class Session</button>
+                <button onclick="generateAndExportRecord('${courseId}')" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-medium"><i class="fas fa-download mr-2"></i>Generate & Export Record</button>
+                <button onclick="exportAttendanceCSV('${courseId}')" class="bg-green-500 hover:bg-green-600 text-white px-5 py-2.5 rounded-xl font-medium"><i class="fas fa-file-csv mr-2"></i>Export Record</button>
+              </div>
+              <div class="grid grid-cols-2 md:grid-cols-4 gap-4 my-6">
+                ${statCard('fa-clock', 'Total Classes', totalHeld, 'bg-blue-500')}
+                ${statCard('fa-user-check', 'Full Attendance', presentCount, 'bg-green-500')}
+                ${statCard('fa-user-xmark', 'Incomplete', absentCount, 'bg-red-500')}
+                ${statCard('fa-percent', 'Avg Attendance', avgPct+'%', 'bg-purple-500')}
+              </div>
+              <div class="glass rounded-2xl overflow-x-auto">
+                <table class="w-full text-sm"><thead class="bg-gray-100 dark:bg-slate-700"><tr><th class="px-4 py-3">Student</th><th class="px-4 py-3">Reg No</th><th class="px-4 py-3">Full Att.</th><th class="px-4 py-3">Held</th><th class="px-4 py-3">Percentage</th><th class="px-4 py-3">Eligible</th><th class="px-4 py-3">Details</th></tr></thead>
+                <tbody class="divide-y divide-gray-200 dark:divide-slate-600">${records.map(r=>`
+                  <tr>
+                    <td class="px-4 py-3 font-medium text-gray-900 dark:text-white">${r.fullName}</td>
+                    <td class="px-4 py-3">${r.regNo}</td>
+                    <td class="px-4 py-3"><span class="font-bold ${r.classesAttended>=r.classesHeld*0.6?'text-green-600':'text-red-600'}">${r.classesAttended}</span></td>
+                    <td class="px-4 py-3">${r.classesHeld}</td>
+                    <td class="px-4 py-3"><div class="flex items-center gap-2"><div class="w-20 bg-gray-200 dark:bg-slate-600 rounded-full h-2"><div class="h-2 rounded-full ${r.percentage>=60?'bg-green-500':'bg-red-500'}" style="width:${r.percentage}%"></div></div><span class="font-medium">${r.percentage}%</span></div></td>
+                    <td class="px-4 py-3"><span class="px-3 py-1 rounded-full text-xs font-bold ${r.eligible?'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300':'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300'}">${r.eligible?'Yes':'No'}</span></td>
+                    <td class="px-4 py-3"><button onclick="viewStudentAttendanceDetail('${r.id}','${courseId}')" class="text-blue-600 hover:text-blue-800 text-xs font-medium"><i class="fas fa-search mr-1"></i>View</button></td>
+                  </tr>`).join('')}</tbody></table>
+              </div>
+            </div>`;
+            $('#main-content-area').innerHTML = html;
+        }
+
+        function addClassSession(courseId) {
+            const course = APP.data.courses.find(c => c.id === courseId);
+            if (!course) return;
+            const date = prompt('Enter session date (YYYY-MM-DD):', new Date().toISOString().split('T')[0]);
+            if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) { showToast('Invalid date format.', 'error'); return; }
+            const topic = prompt('Enter session topic:', 'Lecture');
+            if (!topic || !topic.trim()) return;
+            const newSession = { date, topic: topic.trim() };
+            if (!APP.data.classSessions[courseId]) APP.data.classSessions[courseId] = [];
+            APP.data.classSessions[courseId].push(newSession);
+            // Initialize attendance for all enrolled students as absent
+            const enrolledStudents = APP.data.students.filter(s => s.courses.includes(courseId));
+            enrolledStudents.forEach(s => {
+                if (!APP.data.attendance[s.id]) APP.data.attendance[s.id] = {};
+                if (!APP.data.attendance[s.id][courseId]) APP.data.attendance[s.id][courseId] = { sessions: {} };
+                APP.data.attendance[s.id][courseId].sessions[date] = {
+                    checkedIn: false,
+                    checkedOut: false,
+                    checkInTime: null,
+                    checkOutTime: null,
+                };
+            });
+            saveState();
+            showToast(`Session added on ${date} for ${course.name}`, 'success');
+            viewLecturerCourseDetail(courseId);
+        }
+
+        function generateAndExportRecord(courseId) {
+            const threshold = prompt('Set eligibility threshold percentage:', '60');
+            if (!threshold || isNaN(threshold)) return;
+            const thresh = parseInt(threshold);
+            const course = APP.data.courses.find(c => c.id === courseId);
+            const students = APP.data.students.filter(s => s.courses.includes(courseId));
+            const totalHeld = getClassesHeld(courseId);
+            const records = students.map(s => {
+                const attended = getClassesAttended(s.id, courseId);
+                const pct = totalHeld > 0 ? Math.round((attended / totalHeld) * 100) : 0;
+                return { studentId: s.id, name: s.fullName, regNo: s.regNo, classesAttended: attended, classesHeld: totalHeld, percentage: pct, eligible: pct >= thresh };
+            });
+            const recordData = { generatedAt: new Date().toISOString(), threshold: thresh, courseId, courseName: course?.name || courseId, records };
+            localStorage.setItem('sams_attendance_record_' + courseId, JSON.stringify(recordData));
+            let csv = 'Name,Reg No,Full Attended,Held,Percentage,Eligible\n';
+            records.forEach(r => { csv += `${r.name},${r.regNo},${r.classesAttended},${r.classesHeld},${r.percentage}%,${r.eligible?'Yes':'No'}\n`; });
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = `attendance_record_${courseId}_${new Date().toISOString().split('T')[0]}.csv`;
+            a.click(); URL.revokeObjectURL(url);
+            showToast(`Record generated & CSV downloaded! (Threshold: ${thresh}%)`, 'success');
+            viewLecturerCourseDetail(courseId);
+        }
+
+        function exportAttendanceCSV(courseId) {
+            const stored = localStorage.getItem('sams_attendance_record_' + courseId);
+            let data;
+            if (stored) {
+                data = JSON.parse(stored).records;
+            } else {
+                const students = APP.data.students.filter(s => s.courses.includes(courseId));
+                const totalHeld = getClassesHeld(courseId);
+                data = students.map(s => {
+                    const attended = getClassesAttended(s.id, courseId);
+                    return { name: s.fullName, regNo: s.regNo, classesAttended: attended, classesHeld: totalHeld, percentage: totalHeld > 0 ? Math.round((attended / totalHeld) * 100) : 0 };
+                });
+            }
+            let csv = 'Name,Reg No,Full Attended,Held,Percentage\n';
+            data.forEach(r => { csv += `${r.name},${r.regNo},${r.classesAttended},${r.classesHeld},${r.percentage}%\n`; });
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a'); a.href = url; a.download = `attendance_${courseId}.csv`; a.click(); URL.revokeObjectURL(url);
+            showToast('CSV exported successfully!', 'success');
+        }
+
+        function viewStudentAttendanceDetail(studentId, courseId) {
+            const student = APP.data.students.find(s => s.id === studentId);
+            const course = APP.data.courses.find(c => c.id === courseId);
+            if (!student || !course) return;
+            const sessions = APP.data.classSessions[courseId] || [];
+            const attendanceData = APP.data.attendance[studentId]?.[courseId]?.sessions || {};
+            const totalHeld = sessions.length;
+            const fullAttended = getClassesAttended(studentId, courseId);
+            const pct = getAttendancePercentage(studentId, courseId);
+            let html = `
+            <div class="fade-in">
+              <button onclick="viewLecturerCourseDetail('${courseId}')" class="mb-4 text-blue-600 font-medium"><i class="fas fa-arrow-left mr-2"></i>Back</button>
+              <div class="glass rounded-2xl p-6">
+                <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-1">${student.fullName}</h2>
+                <p class="text-sm text-gray-500 mb-4">${student.regNo} · ${course.name} - ${course.title}</p>
+                <div class="grid grid-cols-3 gap-4 mb-6">
+                  <div class="text-center p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl"><p class="text-2xl font-bold text-blue-600">${totalHeld}</p><p class="text-xs text-gray-500">Total Classes</p></div>
+                  <div class="text-center p-3 bg-green-50 dark:bg-green-900/20 rounded-xl"><p class="text-2xl font-bold text-green-600">${fullAttended}</p><p class="text-xs text-gray-500">Full Attendance ✓</p></div>
+                  <div class="text-center p-3 ${pct>=60?'bg-green-50 dark:bg-green-900/20':'bg-red-50 dark:bg-red-900/20'} rounded-xl"><p class="text-2xl font-bold ${pct>=60?'text-green-600':'text-red-600'}">${pct}%</p><p class="text-xs text-gray-500">${pct>=60?'Eligible ✅':'Not Eligible ❌'}</p></div>
+                </div>
+                <div class="space-y-2 max-h-80 overflow-y-auto custom-scroll">`;
+            sessions.forEach(sess => {
+                const status = getStudentSessionStatus(studentId, courseId, sess.date);
+                let badge, bgClass;
+                if (status === 'full') { badge = '✓ Full'; bgClass = 'bg-green-100 dark:bg-green-900/30 border-green-300 dark:border-green-700 text-green-700 dark:text-green-300'; }
+                else if (status === 'checkin-only') { badge = '⚠ Check-in Only'; bgClass = 'bg-yellow-100 dark:bg-yellow-900/30 border-yellow-300 dark:border-yellow-700 text-yellow-700 dark:text-yellow-300'; }
+                else if (status === 'checkout-only') { badge = '⚠ Check-out Only'; bgClass = 'bg-yellow-100 dark:bg-yellow-900/30 border-yellow-300 dark:border-yellow-700 text-yellow-700 dark:text-yellow-300'; }
+                else { badge = '✗ Absent'; bgClass = 'bg-red-100 dark:bg-red-900/30 border-red-300 dark:border-red-700 text-red-700 dark:text-red-300'; }
+                const sessData = attendanceData[sess.date] || {};
+                html += `
+                <div class="flex items-center justify-between px-4 py-3 rounded-xl border ${bgClass}">
+                  <div><span class="font-medium text-sm">${sess.date}</span><span class="text-xs ml-3 opacity-70">${sess.topic}</span></div>
+                  <div class="flex items-center gap-3 text-xs">
+                    ${sessData.checkInTime ? `<span>In: ${sessData.checkInTime}</span>` : ''}
+                    ${sessData.checkOutTime ? `<span>Out: ${sessData.checkOutTime}</span>` : ''}
+                    <span class="font-bold">${badge}</span>
+                  </div>
+                </div>`;
+            });
+            html += `</div></div></div>`;
+            $('#main-content-area').innerHTML = html;
+        }
+
+        function renderLecturerReportPage() {
+            const lec = APP.currentUser;
+            if (!lec || lec.role !== 'lecturer') return;
+            const html = `
+            <div class="fade-in max-w-2xl mx-auto">
+              <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">Submit a Report</h1>
+              <div class="glass rounded-2xl p-6 space-y-4">
+                <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Subject</label><input id="lec-report-subject" type="text" class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-green-500 outline-none" placeholder="Enter report subject..."></div>
+                <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Message</label><textarea id="lec-report-message" rows="5" class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-green-500 outline-none" placeholder="Describe your issue or complaint..."></textarea></div>
+                <button onclick="submitLecturerReport()" class="w-full bg-green-600 hover:bg-green-700 text-white py-3.5 rounded-xl font-semibold transition-all shadow-lg">Submit Report</button>
+              </div>
+              <div class="mt-8">
+                <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">My Previous Reports</h2>
+                <div class="space-y-3" id="lec-my-reports"></div>
+              </div>
+            </div>`;
+            $('#main-content-area').innerHTML = html;
+            renderMyLecturerReports();
+        }
+
+        function renderMyLecturerReports() {
+            const lec = APP.currentUser;
+            const myReports = APP.data.lecturerReports.filter(r => r.lecturerId === lec.id);
+            const container = $('#lec-my-reports');
+            if (!container) return;
+            container.innerHTML = myReports.length === 0 ? '<p class="text-gray-400 text-center py-4">No reports submitted yet</p>' :
+                myReports.map(r => `
+            <div class="glass rounded-2xl p-4">
+              <div class="flex justify-between items-start">
+                <div><h3 class="font-medium text-gray-900 dark:text-white">${r.subject}</h3><p class="text-xs text-gray-500">${r.date}</p></div>
+                <button onclick="deleteMyReport('lecturer','${r.id}')" class="p-1.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg"><i class="fas fa-trash text-sm"></i></button>
+              </div>
+              <p class="text-sm text-gray-600 dark:text-gray-300 mt-2">${r.message}</p>
+            </div>`).join('');
+        }
+
+        function submitLecturerReport() {
+            const subject = $('#lec-report-subject')?.value.trim();
+            const message = $('#lec-report-message')?.value.trim();
+            if (!subject || !message) { showToast('Please fill all fields', 'error'); return; }
+            const lec = APP.currentUser;
+            const report = { id: 'LREP' + Date.now(), lecturerId: lec.id, lecturerName: lec.fullName, staffId: lec.staffId || '', subject, message, date: new Date().toISOString().split('T')[0] };
+            APP.data.lecturerReports.push(report);
+            saveState();
+            showToast('Report submitted successfully!', 'success');
+            $('#lec-report-subject').value = '';
+            $('#lec-report-message').value = '';
+            renderMyLecturerReports();
+        }
+
+        function deleteMyReport(type, reportId) {
+            showConfirm('Delete this report?', () => {
+                if (type === 'student') { APP.data.studentReports = APP.data.studentReports.filter(r => r.id !== reportId); renderMyStudentReports(); }
+                else { APP.data.lecturerReports = APP.data.lecturerReports.filter(r => r.id !== reportId); renderMyLecturerReports(); }
+                saveState();
+                showToast('Report deleted', 'success');
+            });
+        }
+
+        // ==================== STUDENT DASHBOARD ====================
+        function renderStudentDashboard() {
+            const stu = APP.currentUser;
+            if (!stu || stu.role !== 'student') return;
+            const studentData = APP.data.students.find(s => s.id === stu.id) || stu;
+            const enrolledCourseIds = studentData.courses || [];
+            const courses = APP.data.courses.filter(c => enrolledCourseIds.includes(c.id));
+            let totalHeldAll = 0, totalFullAttendedAll = 0;
+            courses.forEach(c => { totalHeldAll += getClassesHeld(c.id); totalFullAttendedAll += getClassesAttended(studentData.id, c.id); });
+            const overallPct = totalHeldAll > 0 ? Math.round((totalFullAttendedAll / totalHeldAll) * 100) : 0;
+            const html = `
+            <div class="fade-in">
+              <div class="glass rounded-2xl p-6 mb-6">
+                <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                  <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center text-white text-2xl font-bold">${studentData.fullName.charAt(0)}</div>
+                  <div>
+                    <h1 class="text-xl font-bold text-gray-900 dark:text-white">${studentData.fullName}</h1>
+                    <p class="text-sm text-gray-500">${studentData.regNo} · ${studentData.department} · ${studentData.level} Level · ${studentData.faculty}</p>
+                  </div>
+                </div>
+              </div>
+              <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                ${statCard('fa-book', 'My Courses', courses.length, 'bg-blue-500')}
+                ${statCard('fa-clock', 'Total Sessions', totalHeldAll, 'bg-cyan-500')}
+                ${statCard('fa-check', 'Full Attendance', totalFullAttendedAll, 'bg-green-500')}
+                ${statCard('fa-percent', 'Overall', overallPct+'%', overallPct>=60?'bg-green-500':'bg-red-500')}
+              </div>
+              <p class="text-xs text-gray-400 mb-4"><i class="fas fa-info-circle mr-1"></i> Attendance only counts when you check in AND check out for a session</p>
+              <div class="flex gap-6">
+                <div class="w-56 flex-shrink-0 hidden lg:block">
+                  <h3 class="font-semibold text-gray-900 dark:text-white mb-3 text-sm uppercase tracking-wider">My Courses</h3>
+                  <div class="space-y-1" id="stu-course-sidebar"></div>
+                </div>
+                <div class="flex-1" id="stu-course-detail">
+                  <div class="glass rounded-2xl p-8 text-center">
+                    <i class="fas fa-hand-pointer text-4xl text-gray-300 dark:text-gray-600 mb-3"></i>
+                    <p class="text-gray-400 dark:text-gray-500">Select a course from the sidebar to view your attendance details</p>
+                  </div>
+                </div>
+              </div>
+              <div class="lg:hidden mt-6">
+                <h3 class="font-semibold text-gray-900 dark:text-white mb-3">My Courses</h3>
+                <div class="grid gap-3" id="stu-course-mobile"></div>
+              </div>
+            </div>`;
+            $('#main-content-area').innerHTML = html;
+            const sidebar = $('#stu-course-sidebar');
+            const mobileContainer = $('#stu-course-mobile');
+            courses.forEach(c => {
+                const pct = getAttendancePercentage(studentData.id, c.id);
+                const held = getClassesHeld(c.id);
+                const attended = getClassesAttended(studentData.id, c.id);
+                const div = document.createElement('div');
+                div.className = 'px-3 py-2.5 rounded-xl cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors text-sm font-medium text-gray-700 dark:text-gray-300 flex justify-between items-center';
+                div.innerHTML = `<span>${c.name}</span><span class="text-xs font-bold ${pct>=60?'text-green-500':'text-red-500'}">${pct}%</span>`;
+                div.onclick = () => {
+                    showStudentCourseDetail(c.id, studentData.id);
+                    sidebar.querySelectorAll('div').forEach(d => d.classList.remove('bg-blue-50', 'dark:bg-blue-900/20', 'text-blue-700', 'dark:text-blue-300'));
+                    div.classList.add('bg-blue-50', 'dark:bg-blue-900/20', 'text-blue-700', 'dark:text-blue-300');
+                };
+                sidebar.appendChild(div);
+                const mobileCard = document.createElement('div');
+                mobileCard.className = 'glass rounded-2xl p-4 card-hover cursor-pointer flex justify-between items-center';
+                mobileCard.innerHTML = `
+                <div>
+                  <span class="font-semibold text-gray-900 dark:text-white">${c.name}</span>
+                  <p class="text-xs text-gray-500">${c.title}</p>
+                  <p class="text-xs text-gray-400 mt-1">${attended}/${held} full attendances · ${pct}%</p>
+                </div>
+                <i class="fas fa-chevron-right text-gray-400"></i>`;
+                mobileCard.onclick = () => showStudentCourseDetail(c.id, studentData.id);
+                mobileContainer.appendChild(mobileCard);
+            });
+            if (courses.length === 0) {
+                sidebar.innerHTML = '<p class="text-sm text-gray-400 px-3 py-4">No courses assigned yet.</p>';
+                mobileContainer.innerHTML = '<p class="text-sm text-gray-400 text-center py-4">No courses assigned yet.</p>';
+            }
+        }
+
+        function showStudentCourseDetail(courseId, studentId) {
+            const course = APP.data.courses.find(c => c.id === courseId);
+            if (!course) return;
+            const sessions = APP.data.classSessions[courseId] || [];
+            const totalHeld = sessions.length;
+            const fullAttended = getClassesAttended(studentId, courseId);
+            const missed = totalHeld - fullAttended;
+            const pct = getAttendancePercentage(studentId, courseId);
+            const eligible = pct >= 60;
+            const attendanceData = APP.data.attendance[studentId]?.[courseId]?.sessions || {};
+            const detailDiv = $('#stu-course-detail');
+            if (!detailDiv) return;
+            let sessionHtml = '';
+            sessions.forEach(sess => {
+                const status = getStudentSessionStatus(studentId, courseId, sess.date);
+                let icon, colorClass;
+                if (status === 'full') { icon = '✓'; colorClass = 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300 border-green-300'; }
+                else if (status === 'checkin-only') { icon = '⚠'; colorClass = 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300 border-yellow-300'; }
+                else if (status === 'checkout-only') { icon = '⚠'; colorClass = 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300 border-yellow-300'; }
+                else { icon = '✗'; colorClass = 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300 border-red-300'; }
+                const sessData = attendanceData[sess.date] || {};
+                sessionHtml += `
+                <div class="flex items-center justify-between px-3 py-2.5 rounded-xl border ${colorClass} text-xs">
+                  <div><span class="font-medium">${sess.date}</span><span class="ml-2 opacity-70">${sess.topic}</span></div>
+                  <div class="flex items-center gap-2">
+                    ${sessData.checkInTime ? `<span class="opacity-70">In:${sessData.checkInTime}</span>` : ''}
+                    ${sessData.checkOutTime ? `<span class="opacity-70">Out:${sessData.checkOutTime}</span>` : ''}
+                    <span class="font-bold">${icon}</span>
+                  </div>
+                </div>`;
+            });
+            detailDiv.innerHTML = `
+            <div class="glass rounded-2xl p-6 slide-in">
+              <h3 class="text-lg font-bold text-gray-900 dark:text-white">${course.name} - ${course.title}</h3>
+              <p class="text-xs text-gray-400 mt-1 mb-4">Only sessions with both check-in and check-out count as attended</p>
+              <div class="grid grid-cols-2 md:grid-cols-4 gap-4 my-4">
+                <div class="text-center p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl"><p class="text-2xl font-bold text-blue-600">${totalHeld}</p><p class="text-xs text-gray-500">Total Classes</p></div>
+                <div class="text-center p-3 bg-green-50 dark:bg-green-900/20 rounded-xl"><p class="text-2xl font-bold text-green-600">${fullAttended}</p><p class="text-xs text-gray-500">Full Attendance ✓</p></div>
+                <div class="text-center p-3 bg-red-50 dark:bg-red-900/20 rounded-xl"><p class="text-2xl font-bold text-red-600">${missed}</p><p class="text-xs text-gray-500">Incomplete/Absent</p></div>
+                <div class="text-center p-3 ${eligible?'bg-green-50 dark:bg-green-900/20':'bg-red-50 dark:bg-red-900/20'} rounded-xl"><p class="text-2xl font-bold ${eligible?'text-green-600':'text-red-600'}">${pct}%</p><p class="text-xs text-gray-500">${eligible?'Eligible ✅':'Not Eligible ❌'}</p></div>
+              </div>
+              <div class="mb-4"><p class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Attendance Progress</p><div class="w-full bg-gray-200 dark:bg-slate-600 rounded-full h-4"><div class="h-4 rounded-full transition-all duration-500 ${pct>=60?'bg-green-500':'bg-red-500'}" style="width:${pct}%"></div></div><p class="text-xs text-gray-400 mt-1">${fullAttended} of ${totalHeld} full attendances</p></div>
+              <div class="space-y-1.5 max-h-64 overflow-y-auto custom-scroll">
+                ${sessionHtml || '<p class="text-gray-400 text-sm text-center py-4">No class sessions recorded yet</p>'}
+              </div>
+              <p class="text-xs text-gray-400 mt-3"><span class="text-green-600 font-bold">✓</span> = Full (counts) · <span class="text-yellow-600 font-bold">⚠</span> = Incomplete (doesn't count) · <span class="text-red-600 font-bold">✗</span> = Absent</p>
+            </div>`;
+        }
+
+        function renderStudentReportPage() {
+            const stu = APP.currentUser;
+            if (!stu || stu.role !== 'student') return;
+            const html = `
+            <div class="fade-in max-w-2xl mx-auto">
+              <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">Submit a Report</h1>
+              <div class="glass rounded-2xl p-6 space-y-4">
+                <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Subject</label><input id="stu-report-subject" type="text" class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 outline-none" placeholder="Enter report subject..."></div>
+                <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Message</label><textarea id="stu-report-message" rows="5" class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 outline-none" placeholder="Describe your issue or complaint..."></textarea></div>
+                <button onclick="submitStudentReport()" class="w-full bg-purple-600 hover:bg-purple-700 text-white py-3.5 rounded-xl font-semibold transition-all shadow-lg">Submit Report</button>
+              </div>
+              <div class="mt-8">
+                <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">My Previous Reports</h2>
+                <div class="space-y-3" id="stu-my-reports"></div>
+              </div>
+            </div>`;
+            $('#main-content-area').innerHTML = html;
+            renderMyStudentReports();
+        }
+
+        function renderMyStudentReports() {
+            const stu = APP.currentUser;
+            const myReports = APP.data.studentReports.filter(r => r.studentId === stu.id);
+            const container = $('#stu-my-reports');
+            if (!container) return;
+            container.innerHTML = myReports.length === 0 ? '<p class="text-gray-400 text-center py-4">No reports submitted yet</p>' :
+                myReports.map(r => `
+            <div class="glass rounded-2xl p-4">
+              <div class="flex justify-between items-start">
+                <div><h3 class="font-medium text-gray-900 dark:text-white">${r.subject}</h3><p class="text-xs text-gray-500">${r.date}</p></div>
+                <button onclick="deleteMyReport('student','${r.id}')" class="p-1.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg"><i class="fas fa-trash text-sm"></i></button>
+              </div>
+              <p class="text-sm text-gray-600 dark:text-gray-300 mt-2">${r.message}</p>
+            </div>`).join('');
+        }
+
+        function submitStudentReport() {
+            const subject = $('#stu-report-subject')?.value.trim();
+            const message = $('#stu-report-message')?.value.trim();
+            if (!subject || !message) { showToast('Please fill all fields', 'error'); return; }
+            const stu = APP.currentUser;
+            const report = { id: 'SREP' + Date.now(), studentId: stu.id, studentName: stu.fullName, regNo: stu.regNo || '', subject, message, date: new Date().toISOString().split('T')[0] };
+            APP.data.studentReports.push(report);
+            saveState();
+            showToast('Report submitted successfully!', 'success');
+            $('#stu-report-subject').value = '';
+            $('#stu-report-message').value = '';
+            renderMyStudentReports();
+        }
+
+        // ==================== INITIALIZATION ====================
+        function init() {
+            loadState();
+            $('#role-selection-overlay').addEventListener('click', function(e) { if (e.target === this) closeRoleSelection(); });
+            $('#login-page-admin').addEventListener('click', function(e) { if (e.target === this) closeLoginPage('admin'); });
+            $('#login-page-lecturer').addEventListener('click', function(e) { if (e.target === this) closeLoginPage('lecturer'); });
+            $('#login-page-student').addEventListener('click', function(e) { if (e.target === this) closeLoginPage('student'); });
+            $('#confirm-modal').addEventListener('click', function(e) { if (e.target === this) confirmAction(false); });
+            document.addEventListener('click', function(e) {
+                const sidebar = $('#sidebar');
+                if (sidebar && !sidebar.contains(e.target) && !e.target.closest('button[onclick="toggleSidebar()"]') && window.innerWidth < 768) {
+                    sidebar.classList.add('-translate-x-full');
+                }
+            });
+            console.log('🚀 SAMS v4 - Updated with semester, dynamic sessions, lecturer edit, export');
+        }
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
