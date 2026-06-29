@@ -20,7 +20,7 @@ export default async function handler(req, res) {
   // 2. Database logic
   try {
     const connection = await mysql.createConnection(process.env.DATABASE_URL);
-    await connection.execute('INSERT INTO temp_registration (rfid_uid) VALUES (?)', [rfid_uid]);
+    await connection.execute('INSERT INTO temp_registrations (rfid_uid) VALUES (?)', [rfid_uid]);
     await connection.end();
     
     res.status(200).json({ success: true });
